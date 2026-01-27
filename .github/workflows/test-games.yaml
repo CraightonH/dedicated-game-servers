@@ -77,7 +77,7 @@ jobs:
             echo "games=[]" >> $GITHUB_OUTPUT
             echo "No games to test"
           else
-            GAMES_JSON=$(printf '%s\n' "${GAMES_TO_TEST[@]}" | jq -R . | jq -s . || echo '[]')
+            GAMES_JSON=$(printf '%s\n' "${GAMES_TO_TEST[@]}" | jq -R . | jq -sc . || echo '[]')
             echo "games=$GAMES_JSON" >> $GITHUB_OUTPUT
             echo "Games to test: ${GAMES_TO_TEST[@]}"
           fi
