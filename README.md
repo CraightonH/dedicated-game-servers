@@ -49,7 +49,8 @@ dedicated-game-servers/
 └── games/              # Game-specific configurations
     ├── factorio/
     │   ├── values.yaml
-    │   └── README.md
+    │   ├── README.md
+    │   └── test.sh     # Automated validation
     └── valheim/
         ├── values.yaml
         └── README.md
@@ -70,6 +71,16 @@ dedicated-game-servers/
 ## Configuration
 
 See individual game READMEs in `games/<game-name>/` for detailed configuration options.
+
+## Testing
+
+Each game includes a `test.sh` script that validates deployments. CI/CD automatically:
+- Detects which games changed in your PR
+- Deploys to a test Kubernetes cluster (kind)
+- Runs game-specific validation
+- Reports pass/fail status
+
+See [games/README.md](./games/README.md) for testing details.
 
 ## Why Not an Operator?
 

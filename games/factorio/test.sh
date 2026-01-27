@@ -1,4 +1,6 @@
 #!/bin/bash
+# Factorio deployment validation test
+# This script validates a Factorio server deployment in CI/CD
 set -e
 
 POD=$(kubectl get pod -l app=factorio -o jsonpath='{.items[0].metadata.name}')

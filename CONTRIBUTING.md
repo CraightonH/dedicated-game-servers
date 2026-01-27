@@ -39,12 +39,13 @@ See `games/factorio/README.md` for a good example. Include:
 - **Connecting** - How players join the server
 - **Troubleshooting** - Common issues
 
-### 4. Create Validation Script
+### 4. Create Test Script
 
-Create `tests/validate-<game-name>.sh`:
+Create `games/<game-name>/test.sh`:
 
 ```bash
 #!/bin/bash
+# <Game Name> deployment validation test
 set -e
 
 POD=$(kubectl get pod -l app=<game-name> -o jsonpath='{.items[0].metadata.name}')
@@ -72,63 +73,26 @@ echo "✅ All validation checks passed!"
 
 Make it executable:
 ```bash
-chmod +x tests/validate-<game-name>.sh
+chmod +x games/<game-name>/test.sh
 ```
 
-### 5. Add to CI/CD
+### 5. CI/CD Auto-Discovery
 
-Edit `.github/workflows/test-deployment.yaml`:
+**No workflow changes needed!** The CI/CD workflow automatically:
+1. Detects which games changed in the PR
+2. Finds games with `test.sh` files
+3. Runs tests for affected games
 
-1. Add to the `detect-changes` job filters:
-   ```yaml
-   <game-name>:
-     - 'games/<game-name>/**'
-     - 'chart/**'
-   ```
+Your game will be tested automatically once you have:
+- `games/<game-name>/values.yaml`
+- `games/<game-name>/test.sh` (executable)
 
-2. Add a new job (copy and modify `test-factorio`):
-   ```yaml
-   test-<game-name>:
-     needs: detect-changes
-     if: needs.detect-changes.outputs.<game-name> == 'true'
-     runs-on: ubuntu-latest
-     steps:
-       - name: Checkout
-         uses: actions/checkout@v4
-       
-       - name: Set up Helm
-         uses: azure/setup-helm@v4
-       
-       - name: Set up kind cluster
-         uses: helm/kind-action@v1
-       
-       - name: Deploy <game-name>
-         run: |
-           helm install <game-name>-test ./chart \
-             --values ./games/<game-name>/values.yaml \
-             --set persistence.storageClass="" \
-             --wait --timeout=5m
-       
-       - name: Run validation
-         run: |
-           chmod +x ./tests/validate-<game-name>.sh
-           ./tests/validate-<game-name>.sh
-       
-       - name: Get logs
-         if: always()
-         run: kubectl logs -l app=<game-name> --tail=100
-       
-       - name: Cleanup
-         if: always()
-         run: helm uninstall <game-name>-test || true
-   ```
-
-3. Add to helm-lint.yaml:
-   ```yaml
-   - name: Lint <game-name> values
-     run: |
-       helm lint ./chart --values ./games/<game-name>/values.yaml
-   ```
+To add helm linting for your game, edit `.github/workflows/helm-lint.yaml`:
+```yaml
+- name: Lint <game-name> values
+  run: |
+    helm lint ./chart --values ./games/<game-name>/values.yaml
+```
 
 ### 6. Test Locally
 
@@ -156,7 +120,7 @@ kind delete cluster --name test
 1. Commit your changes:
    ```bash
    git checkout -b feat/add-<game-name>
-   git add games/<game-name>/ tests/validate-<game-name>.sh .github/
+   git add games/<game-name>/
    git commit -m "feat: add <game-name> support"
    git push -u origin feat/add-<game-name>
    ```

@@ -211,6 +211,29 @@ resources:
     cpu: "4000m"
 ```
 
+## Testing
+
+This game includes an automated test script (`test.sh`) that validates deployments in CI/CD.
+
+To test locally:
+```bash
+# Deploy Factorio
+helm install factorio ../../chart --values values.yaml
+
+# Run validation
+./test.sh
+
+# Cleanup
+helm uninstall factorio
+```
+
+The test validates:
+- Pod readiness
+- Server startup logs
+- Config file generation
+- PVC binding
+- Service configuration
+
 ## References
 
 - [Factorio Docker Image](https://github.com/factoriotools/factorio-docker)
