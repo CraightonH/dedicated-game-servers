@@ -16,8 +16,8 @@ home: https://github.com/CraightonH/dedicated-game-servers
 sources:
   - https://github.com/CraightonH/dedicated-game-servers
 
-# Gaming controller icon from simple-icons
-icon: https://cdn.simpleicons.org/steam/1b2838
+# Generic server icon (no trademark issues)
+icon: https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.svg
 
 maintainers:
   - name: CraightonH
