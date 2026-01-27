@@ -28,9 +28,9 @@ spec:
       tolerations:
         {{- toYaml .Values.tolerations | nindent 8 }}
       {{- end }}
-      {{- if .Values.securityContext }}
+      {{- if .Values.podSecurityContext }}
       securityContext:
-        {{- toYaml .Values.securityContext | nindent 8 }}
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- end }}
       {{- if .Values.initContainers }}
       initContainers:
@@ -40,6 +40,10 @@ spec:
       - name: game-server
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if .Values.containerSecurityContext }}
+        securityContext:
+          {{- toYaml .Values.containerSecurityContext | nindent 10 }}
+        {{- end }}
         {{- if .Values.env }}
         env:
           {{- toYaml .Values.env | nindent 10 }}
