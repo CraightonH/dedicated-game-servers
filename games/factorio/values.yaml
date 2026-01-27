@@ -4,9 +4,11 @@
 name: "factorio"
 
 # Factorio Docker image
+# Using rootless variant to avoid NFS permission issues
+# See: https://github.com/factoriotools/factorio-docker/blob/master/PERMISSION_ISSUES_GUIDE.md
 image:
   repository: factoriotools/factorio
-  tag: "stable"  # or "latest", or specific version like "1.1.104"
+  tag: "stable-rootless"  # Runs as UID 1000, avoids permission issues
   pullPolicy: IfNotPresent
 
 # Resource allocation
@@ -110,8 +112,8 @@ nodeSelector: {}
 # Optional: Tolerations
 tolerations: []
 
-# Security context
+# Security context for rootless image
 securityContext:
-  fsGroup: 845  # factorio user ID in the container
-  runAsUser: 845
+  fsGroup: 1000  # rootless image runs as UID 1000
+  runAsUser: 1000
   runAsNonRoot: true

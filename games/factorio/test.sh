@@ -96,12 +96,12 @@ else
     exit 1
 fi
 
-# Verify security context was applied
+# Verify security context was applied (rootless image uses UID 1000)
 echo "🔒 Checking security context..."
 FS_GROUP=$(kubectl get pod $POD -o jsonpath='{.spec.securityContext.fsGroup}')
 RUN_AS_USER=$(kubectl get pod $POD -o jsonpath='{.spec.securityContext.runAsUser}')
-if [ "$FS_GROUP" = "845" ] && [ "$RUN_AS_USER" = "845" ]; then
-    echo "✅ Security context configured correctly (fsGroup=845, runAsUser=845)"
+if [ "$FS_GROUP" = "1000" ] && [ "$RUN_AS_USER" = "1000" ]; then
+    echo "✅ Security context configured correctly (fsGroup=1000, runAsUser=1000)"
 else
     echo "❌ Security context incorrect: fsGroup=$FS_GROUP, runAsUser=$RUN_AS_USER"
     exit 1
