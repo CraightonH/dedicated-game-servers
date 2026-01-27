@@ -106,21 +106,32 @@ jobs:
           cluster_name: ${{ matrix.game }}-test
           wait: 120s
 
+      - name: Install local-path-provisioner for proper fsGroup support
+        run: |
+          echo "📦 Installing Rancher local-path-provisioner..."
+          kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.28/deploy/local-path-storage.yaml
+          
+          # Wait for provisioner to be ready
+          kubectl wait --for=condition=available --timeout=60s deployment/local-path-provisioner -n local-path-storage
+          
+          # Set as default storage class
+          kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+          
+          echo "✅ Storage provisioner ready"
+
       - name: Deploy ${{ matrix.game }}
         run: |
           echo "🚀 Deploying ${{ matrix.game }}..."
           
           # Install with CI-optimized settings
-          # Note: kind's hostpath provisioner doesn't fully support fsGroup,
-          # so we deploy without --wait to allow testing of resource creation
           helm install ${{ matrix.game }}-test ./chart \
             --values ./games/${{ matrix.game }}/values.yaml \
             --set name=${{ matrix.game }} \
-            --set persistence.storageClass="" \
+            --set persistence.storageClass="local-path" \
             --set persistence.size="1Gi" \
             --set resources.requests.memory="512Mi" \
             --set resources.limits.memory="1Gi" \
-            --timeout=5m
+            --wait --timeout=5m
 
       - name: Verify deployment resources
         run: |
