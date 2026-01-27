@@ -16,7 +16,9 @@ helm install factorio ../../chart --values values.yaml
 |---------|-------------|---------|
 | `name` | Server deployment name | `factorio` |
 | `image.repository` | Docker image | `factoriotools/factorio` |
-| `image.tag` | Image version | `stable` |
+| `image.tag` | Image version | `stable-rootless` |
+
+**Note**: We use the `stable-rootless` image variant to avoid NFS permission issues. See the [Factorio Docker permission guide](https://github.com/factoriotools/factorio-docker/blob/master/PERMISSION_ISSUES_GUIDE.md) for more details.
 
 ### Server Settings (server-settings.json)
 
