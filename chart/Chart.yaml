@@ -16,8 +16,8 @@ home: https://github.com/CraightonH/dedicated-game-servers
 sources:
   - https://github.com/CraightonH/dedicated-game-servers
 
-# Generic server icon (no trademark issues)
-icon: https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo.svg
+# Game controller icon
+icon: https://cdn-icons-png.flaticon.com/512/8674/8674162.png
 
 maintainers:
   - name: CraightonH
