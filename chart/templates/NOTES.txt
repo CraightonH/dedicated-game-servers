@@ -1,0 +1,41 @@
+🎮 {{ .Values.name }} has been deployed!
+
+Server Details:
+  Name: {{ .Values.name }}
+  Image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+
+Network Access:
+{{- if eq .Values.service.type "NodePort" }}
+  Service Type: NodePort
+  {{- range .Values.service.ports }}
+  - {{ .name }}: {{ .protocol | default "TCP" }} port {{ .port }}{{- if .nodePort }} (NodePort: {{ .nodePort }}){{- end }}
+  {{- end }}
+
+  Connect to your server using any cluster node IP and the NodePort(s) above.
+{{- else if eq .Values.service.type "LoadBalancer" }}
+  Service Type: LoadBalancer
+  Get the external IP with:
+    kubectl get svc {{ .Values.name }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+{{- end }}
+
+Storage:
+{{- if .Values.persistence.enabled }}
+  Persistent Volume: {{ .Values.name }}-data ({{ .Values.persistence.size }})
+  Mount Path: {{ .Values.persistence.mountPath }}
+{{- else }}
+  ⚠️  Persistence is disabled - save data will be lost on pod restart!
+{{- end }}
+
+Check pod status:
+  kubectl get pods -l app={{ .Values.name }}
+
+View logs:
+  kubectl logs -l app={{ .Values.name }} -f
+
+Delete server:
+  helm uninstall {{ .Release.Name }}
+{{- if .Values.persistence.enabled }}
+  
+  ⚠️  Note: PVC will be retained. Delete manually with:
+    kubectl delete pvc {{ .Values.name }}-data
+{{- end }}

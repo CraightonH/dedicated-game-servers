@@ -1,0 +1,117 @@
+# Factorio Dedicated Server Configuration
+
+# Server identity
+name: "factorio"
+
+# Factorio Docker image
+image:
+  repository: factoriotools/factorio
+  tag: "stable"  # or "latest", or specific version like "1.1.104"
+  pullPolicy: IfNotPresent
+
+# Resource allocation
+resources:
+  requests:
+    memory: "2Gi"
+    cpu: "1000m"
+  limits:
+    memory: "4Gi"
+    cpu: "2000m"
+
+# Persistent storage for saves and mods
+persistence:
+  enabled: true
+  storageClass: "nfs-client"  # Change to your storage class
+  size: "10Gi"
+  mountPath: "/factorio"
+
+# Network configuration (NodePort for home cluster access)
+service:
+  type: NodePort
+  ports:
+    - name: game
+      port: 34197
+      nodePort: 30197  # Change if port is already in use
+      protocol: UDP
+    - name: rcon
+      port: 27015
+      nodePort: 30015  # Change if port is already in use
+      protocol: TCP
+
+# Environment variables
+env:
+  - name: UPDATE_MODS_ON_START
+    value: "false"  # Set to "true" to auto-update mods
+  - name: SAVE_NAME
+    value: "save1"  # Name of the save file
+  - name: GENERATE_NEW_SAVE
+    value: "false"  # Set to "true" to create new world on first start
+
+# Factorio server settings (server-settings.json)
+# Documentation: https://wiki.factorio.com/Multiplayer#Setting_up_a_multiplayer_game
+gameConfig:
+  enabled: true
+  mountPath: "/factorio/config"
+  files:
+    server-settings.json: |
+      {
+        "name": "My Factorio Server",
+        "description": "A Factorio server running on Kubernetes",
+        "tags": ["game", "tags"],
+        "_comment_max_players": "Maximum number of players allowed, admins can join even a full server. 0 means unlimited.",
+        "max_players": 10,
+        "_comment_visibility": "public: Game will be published on the official Factorio matching server",
+        "visibility": {
+          "public": false,
+          "lan": true
+        },
+        "_comment_credentials": "Your factorio.com login credentials. Required for games with visibility public",
+        "username": "",
+        "password": "",
+        "_comment_token": "Authentication token. May be used instead of 'password' above.",
+        "token": "",
+        "game_password": "",
+        "_comment_require_user_verification": "When set to true, the server will only allow clients that have a valid Factorio.com account",
+        "require_user_verification": false,
+        "_comment_max_upload_in_kilobytes_per_second": "optional, default value is 0. 0 means unlimited.",
+        "max_upload_in_kilobytes_per_second": 0,
+        "_comment_max_upload_slots": "optional, default value is 5. 0 means unlimited.",
+        "max_upload_slots": 5,
+        "_comment_minimum_latency_in_ticks": "optional one tick is ~16ms in default speed, default value is 0. 0 means no minimum.",
+        "minimum_latency_in_ticks": 0,
+        "_comment_ignore_player_limit_for_returning_players": "Players that played on this map already can join even when the max player limit was reached.",
+        "ignore_player_limit_for_returning_players": false,
+        "_comment_allow_commands": "possible values are, true, false and admins-only",
+        "allow_commands": "admins-only",
+        "_comment_autosave_interval": "Autosave interval in minutes",
+        "autosave_interval": 10,
+        "_comment_autosave_slots": "server autosave slots, it is cycled through when the server autosaves.",
+        "autosave_slots": 5,
+        "_comment_afk_autokick_interval": "How many minutes until someone is kicked when doing nothing, 0 for never.",
+        "afk_autokick_interval": 0,
+        "_comment_auto_pause": "Whether should the server be paused when no players are present.",
+        "auto_pause": true,
+        "only_admins_can_pause_the_game": true,
+        "_comment_autosave_only_on_server": "Whether autosaves should be saved only on server or also on all connected clients.",
+        "autosave_only_on_server": true,
+        "_comment_non_blocking_saving": "Highly experimental feature, enable only at your own risk of losing your saves.",
+        "non_blocking_saving": false,
+        "_comment_minimum_segment_size": "Long network messages are split into segments that are sent over multiple ticks. Increasing the segment size will increase upload bandwidth requirement but will reduce the overhead.",
+        "minimum_segment_size": 25,
+        "minimum_segment_size_peer_count": 20,
+        "maximum_segment_size": 100,
+        "maximum_segment_size_peer_count": 10
+      }
+
+# Optional: Pin to specific node (e.g., node with more RAM)
+nodeSelector: {}
+  # kubernetes.io/hostname: node1
+
+# Optional: Tolerations
+tolerations: []
+
+# Security context
+securityContext:
+  fsGroup: 845  # factorio user ID in the container
+  runAsUser: 845
+  runAsNonRoot: true
