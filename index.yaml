@@ -3,7 +3,53 @@ entries:
   game-server:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-27T18:06:40.501454538Z"
+    created: "2026-01-27T19:00:01.46221644Z"
+    description: A Helm chart for deploying dedicated game servers on Kubernetes
+    digest: 2c8a1eae99e3108fe8885de9a3a83718476f71c2bee72b5e39ee598380614685
+    home: https://github.com/CraightonH/dedicated-game-servers
+    icon: https://cdn-icons-png.flaticon.com/32/8674/8674162.png
+    keywords:
+    - games
+    - game-server
+    - factorio
+    - valheim
+    - dedicated-server
+    maintainers:
+    - name: CraightonH
+      url: https://github.com/CraightonH
+    name: game-server
+    sources:
+    - https://github.com/CraightonH/dedicated-game-servers
+    type: application
+    urls:
+    - https://craightonh.github.io/dedicated-game-servers/game-server-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-01-27T19:00:01.462864715Z"
+    description: A Helm chart for deploying dedicated game servers on Kubernetes
+    digest: 2c8a1eae99e3108fe8885de9a3a83718476f71c2bee72b5e39ee598380614685
+    home: https://github.com/CraightonH/dedicated-game-servers
+    icon: https://cdn-icons-png.flaticon.com/32/8674/8674162.png
+    keywords:
+    - games
+    - game-server
+    - factorio
+    - valheim
+    - dedicated-server
+    maintainers:
+    - name: CraightonH
+      url: https://github.com/CraightonH
+    name: game-server
+    sources:
+    - https://github.com/CraightonH/dedicated-game-servers
+    type: application
+    urls:
+    - https://craightonh.github.io/dedicated-game-servers/.cr-release-packages/game-server-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-01-27T19:00:01.461890915Z"
     description: A Helm chart for deploying dedicated game servers on Kubernetes
     digest: d7ccf124fc73d2459a7ad7f04f911c7e2bc591e17cde7070b85e62ef8dc51df4
     home: https://github.com/CraightonH/dedicated-game-servers
@@ -26,7 +72,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-27T18:06:40.501749316Z"
+    created: "2026-01-27T19:00:01.46255538Z"
     description: A Helm chart for deploying dedicated game servers on Kubernetes
     digest: d7ccf124fc73d2459a7ad7f04f911c7e2bc591e17cde7070b85e62ef8dc51df4
     home: https://github.com/CraightonH/dedicated-game-servers
@@ -47,4 +93,4 @@ entries:
     urls:
     - https://craightonh.github.io/dedicated-game-servers/.cr-release-packages/game-server-1.0.1.tgz
     version: 1.0.1
-generated: "2026-01-27T18:06:40.500980727Z"
+generated: "2026-01-27T19:00:01.461398099Z"
