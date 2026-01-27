@@ -19,9 +19,23 @@ This chart provides a straightforward way to deploy and manage dedicated game se
 
 ## Quick Start
 
+### Add the Helm Repository
+
+```bash
+helm repo add dedicated-game-servers https://craightonh.github.io/dedicated-game-servers/
+helm repo update
+```
+
 ### Install Factorio Server
 
 ```bash
+# From the Helm repository (recommended)
+helm install factorio dedicated-game-servers/game-server \
+  --values https://raw.githubusercontent.com/CraightonH/dedicated-game-servers/main/games/factorio/values.yaml \
+  --set factorio.serverName="My Factorio Server" \
+  --set factorio.password="changeme"
+
+# Or from local clone
 helm install factorio ./chart \
   --values ./games/factorio/values.yaml \
   --set factorio.serverName="My Factorio Server" \
