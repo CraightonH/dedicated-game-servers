@@ -16,6 +16,9 @@ home: https://github.com/CraightonH/dedicated-game-servers
 sources:
   - https://github.com/CraightonH/dedicated-game-servers
 
+# Gaming controller icon from simple-icons
+icon: https://cdn.simpleicons.org/steam/1b2838
+
 maintainers:
   - name: CraightonH
     url: https://github.com/CraightonH
