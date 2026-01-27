@@ -112,8 +112,12 @@ nodeSelector: {}
 # Optional: Tolerations
 tolerations: []
 
-# Security context for rootless image
-securityContext:
+# Pod-level security context (no runAsNonRoot to allow init container)
+podSecurityContext:
   fsGroup: 1000  # rootless image runs as UID 1000
+
+# Container-level security context
+containerSecurityContext:
   runAsUser: 1000
   runAsNonRoot: true
+  allowPrivilegeEscalation: false
