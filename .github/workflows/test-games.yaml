@@ -28,17 +28,19 @@ jobs:
       - name: Detect changed games
         id: set-games
         run: |
+          set -e  # Exit on error
+          
           # Get list of changed files
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} || echo "")
           else
             # For push events, try to diff with parent
             # If no parent (first commit), test all games
             if git rev-parse HEAD^ >/dev/null 2>&1; then
-              CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+              CHANGED_FILES=$(git diff --name-only HEAD^ HEAD || echo "")
             else
               echo "First commit detected, testing all games"
-              CHANGED_FILES=$(git ls-files)
+              CHANGED_FILES=$(git ls-files || echo "")
             fi
           fi
           
@@ -47,13 +49,24 @@ jobs:
           
           # Find games that have test.sh and were affected by changes
           GAMES_TO_TEST=()
+          
+          # Check if games directory exists
+          if [ ! -d "games" ]; then
+            echo "No games directory found"
+            echo "games=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
           for game_dir in games/*/; do
+            # Skip if no directories found
+            [ -d "$game_dir" ] || continue
+            
             game=$(basename "$game_dir")
             
             # Check if game has test.sh
             if [ -f "games/$game/test.sh" ]; then
               # Check if chart or this game's files changed
-              if echo "$CHANGED_FILES" | grep -q "^chart/\|^games/$game/"; then
+              if echo "$CHANGED_FILES" | grep -q "^chart/\|^games/$game/" || [ -z "$CHANGED_FILES" ]; then
                 GAMES_TO_TEST+=("$game")
               fi
             fi
@@ -64,7 +77,7 @@ jobs:
             echo "games=[]" >> $GITHUB_OUTPUT
             echo "No games to test"
           else
-            GAMES_JSON=$(printf '%s\n' "${GAMES_TO_TEST[@]}" | jq -R . | jq -s .)
+            GAMES_JSON=$(printf '%s\n' "${GAMES_TO_TEST[@]}" | jq -R . | jq -s . || echo '[]')
             echo "games=$GAMES_JSON" >> $GITHUB_OUTPUT
             echo "Games to test: ${GAMES_TO_TEST[@]}"
           fi
