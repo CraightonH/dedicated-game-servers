@@ -1,0 +1,126 @@
+name: Test Deployment
+
+on:
+  pull_request:
+    paths:
+      - 'chart/**'
+      - 'games/**'
+      - '.github/workflows/test-deployment.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'chart/**'
+      - 'games/**'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      factorio: ${{ steps.filter.outputs.factorio }}
+      valheim: ${{ steps.filter.outputs.valheim }}
+      chart: ${{ steps.filter.outputs.chart }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check which games changed
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            factorio:
+              - 'games/factorio/**'
+              - 'chart/**'
+            valheim:
+              - 'games/valheim/**'
+              - 'chart/**'
+            chart:
+              - 'chart/**'
+
+  test-factorio:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.factorio == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
+      - name: Set up kind cluster
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: game-server-test
+          wait: 120s
+
+      - name: Deploy Factorio
+        run: |
+          # Install with test-specific overrides
+          helm install factorio-test ./chart \
+            --values ./games/factorio/values.yaml \
+            --set persistence.storageClass="" \
+            --set persistence.size="1Gi" \
+            --set resources.requests.memory="512Mi" \
+            --set resources.limits.memory="1Gi" \
+            --wait --timeout=5m
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -l app=factorio
+          kubectl get svc factorio
+          kubectl get pvc factorio-data
+
+      - name: Check pod is running
+        run: |
+          kubectl wait --for=condition=ready pod -l app=factorio --timeout=300s
+
+      - name: Get pod logs
+        if: always()
+        run: |
+          kubectl logs -l app=factorio --tail=100
+
+      - name: Run Factorio validation
+        run: |
+          chmod +x ./tests/validate-factorio.sh
+          ./tests/validate-factorio.sh
+
+      - name: Cleanup
+        if: always()
+        run: |
+          helm uninstall factorio-test || true
+
+  # Template for future games
+  # test-valheim:
+  #   needs: detect-changes
+  #   if: needs.detect-changes.outputs.valheim == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     
+  #     - name: Set up Helm
+  #       uses: azure/setup-helm@v4
+  #       with:
+  #         version: 'latest'
+  #     
+  #     - name: Set up kind cluster
+  #       uses: helm/kind-action@v1
+  #       with:
+  #         cluster_name: game-server-test
+  #     
+  #     - name: Deploy Valheim
+  #       run: |
+  #         helm install valheim-test ./chart \
+  #           --values ./games/valheim/values.yaml \
+  #           --set persistence.storageClass="" \
+  #           --wait --timeout=5m
+  #     
+  #     - name: Validate Valheim server
+  #       run: |
+  #         # Add Valheim-specific validation
+  #         POD=$(kubectl get pod -l app=valheim -o jsonpath='{.items[0].metadata.name}')
+  #         kubectl logs $POD | grep "Game server connected"
