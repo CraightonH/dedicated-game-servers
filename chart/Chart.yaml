@@ -16,8 +16,8 @@ home: https://github.com/CraightonH/dedicated-game-servers
 sources:
   - https://github.com/CraightonH/dedicated-game-servers
 
-# Game controller icon
-icon: https://cdn-icons-png.flaticon.com/512/8674/8674162.png
+# Game controller icon (32x32)
+icon: https://cdn-icons-png.flaticon.com/32/8674/8674162.png
 
 maintainers:
   - name: CraightonH
