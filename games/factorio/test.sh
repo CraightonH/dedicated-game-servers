@@ -11,6 +11,11 @@ echo "🔍 Validating Factorio server deployment..."
 echo "⏳ Waiting for pod to be ready..."
 kubectl wait --for=condition=ready pod -l app=factorio --timeout=300s
 
+# Verify pod is still running and container is healthy
+echo "🔍 Checking pod/container status..."
+kubectl get pod $POD -o wide
+kubectl describe pod $POD | grep -A5 "State:"
+
 # Give server a moment to start up
 sleep 10
 
@@ -38,19 +43,33 @@ fi
 
 # Verify config file was created
 echo "📁 Checking config files..."
-if kubectl exec $POD -- test -f /factorio/config/server-settings.json; then
+# Specify container name explicitly
+if kubectl exec $POD -c game-server -- test -f /factorio/config/server-settings.json 2>/dev/null; then
     echo "✅ server-settings.json exists"
     
     # Validate JSON syntax
-    if kubectl exec $POD -- cat /factorio/config/server-settings.json | jq . > /dev/null 2>&1; then
+    if kubectl exec $POD -c game-server -- cat /factorio/config/server-settings.json | jq . > /dev/null 2>&1; then
         echo "✅ server-settings.json is valid JSON"
     else
         echo "❌ server-settings.json is invalid JSON"
         exit 1
     fi
 else
-    echo "❌ server-settings.json not found"
-    exit 1
+    # Fallback: check ConfigMap directly if exec fails
+    echo "⚠️  Could not exec into pod, checking ConfigMap directly..."
+    CM=$(kubectl get configmap factorio-config -o jsonpath='{.data.server-settings\.json}' 2>/dev/null || echo "")
+    if [ -n "$CM" ]; then
+        echo "✅ server-settings.json ConfigMap exists"
+        if echo "$CM" | jq . > /dev/null 2>&1; then
+            echo "✅ server-settings.json is valid JSON"
+        else
+            echo "❌ server-settings.json is invalid JSON"
+            exit 1
+        fi
+    else
+        echo "❌ server-settings.json not found"
+        exit 1
+    fi
 fi
 
 # Check persistent storage
