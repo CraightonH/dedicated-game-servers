@@ -11,9 +11,9 @@ data:
   server-settings.json: |
 {{ .Values.gameConfig.files."server-settings.json" | indent 4 }}
   {{- else if .Values.gameConfig.serverSettings }}
-  {{- /* User-friendly mode: Generate from serverSettings dict */}}
+  {{- /* User-friendly mode: Convert camelCase to snake_case and generate JSON */}}
   server-settings.json: |
-{{ .Values.gameConfig.serverSettings | toJson | indent 4 }}
+{{ include "factorio.camelToSnake" .Values.gameConfig.serverSettings | fromYaml | toJson | indent 4 }}
   {{- end }}
   {{- /* Include any other files from gameConfig.files */}}
   {{- range $filename, $content := .Values.gameConfig.files }}

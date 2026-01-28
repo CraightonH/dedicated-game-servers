@@ -74,8 +74,8 @@ See [values.yaml](values.yaml) for the full list of configuration options.
 | `persistence.size` | Storage size | `50Gi` |
 | `persistence.storageClass` | Storage class | `nfs-client` |
 | `gameConfig.serverSettings.name` | Server name | `My Factorio Server` |
-| `gameConfig.serverSettings.game_password` | Game password | `""` (no password) |
-| `gameConfig.serverSettings.max_players` | Max players | `10` |
+| `gameConfig.serverSettings.gamePassword` | Game password | `""` (no password) |
+| `gameConfig.serverSettings.maxPlayers` | Max players | `10` |
 
 ### Server Settings
 
@@ -90,13 +90,13 @@ gameConfig:
   serverSettings:
     name: "Epic Factory"
     description: "Build the factory!"
-    max_players: 20
-    game_password: "secret123"
+    maxPlayers: 20
+    gamePassword: "secret123"
     visibility:
       public: false
       lan: true
-    auto_pause: true
-    autosave_interval: 5
+    autoPause: true
+    autosaveInterval: 5
 ```
 
 This approach makes it easy to override single settings via `--set`:
@@ -104,7 +104,7 @@ This approach makes it easy to override single settings via `--set`:
 ```bash
 helm install factorio dedicated-game-servers/factorio \
   --set gameConfig.serverSettings.name="My Server" \
-  --set gameConfig.serverSettings.max_players=20
+  --set gameConfig.serverSettings.maxPlayers=20
 ```
 
 #### Advanced: Direct File Control
@@ -134,7 +134,7 @@ gameConfig:
 **Password-protected server**:
 ```bash
 helm install factorio dedicated-game-servers/factorio \
-  --set gameConfig.serverSettings.game_password="mysecretpass"
+  --set gameConfig.serverSettings.gamePassword="mysecretpass"
 ```
 
 **Public server listing on factorio.com**:
@@ -147,15 +147,15 @@ gameConfig:
       lan: true
     username: "your-factorio-username"
     password: "your-factorio-password"
-    require_user_verification: true
+    requireUserVerification: true
 ```
 
 **Large server (20+ players)**:
 ```yaml
 gameConfig:
   serverSettings:
-    max_players: 50
-    autosave_interval: 5  # More frequent saves
+    maxPlayers: 50
+    autosaveInterval: 5  # More frequent saves
 resources:
   requests:
     memory: 4Gi
