@@ -1,0 +1,19 @@
+apiVersion: v2
+name: game-server-library
+description: A library chart for common game server resources
+type: library
+version: 1.0.0
+appVersion: "1.0.0"
+
+keywords:
+  - games
+  - game-server
+  - library
+
+home: https://github.com/CraightonH/dedicated-game-servers
+sources:
+  - https://github.com/CraightonH/dedicated-game-servers
+
+maintainers:
+  - name: CraightonH
+    url: https://github.com/CraightonH

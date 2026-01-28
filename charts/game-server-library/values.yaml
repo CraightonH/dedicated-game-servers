@@ -1,0 +1,88 @@
+# Default values for game-server-library.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Server identity
+name: ""
+
+# Override the full name
+fullnameOverride: ""
+
+# Override the name
+nameOverride: ""
+
+# Container image configuration
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# Environment variables for the container
+env: []
+# - name: EXAMPLE_VAR
+#   value: "value"
+
+# Service configuration
+service:
+  type: NodePort
+  ports: []
+  # - name: game
+  #   port: 25565
+  #   nodePort: 30565
+  #   protocol: TCP
+
+# Persistent storage configuration
+persistence:
+  enabled: true
+  storageClass: ""
+  size: "10Gi"
+  mountPath: "/data"
+
+# Game-specific configuration files
+gameConfig:
+  enabled: false
+  mountPath: "/config"
+  files: {}
+  # example-config.json: |
+  #   { "setting": "value" }
+
+# Pod-level security context
+podSecurityContext: {}
+# fsGroup: 1000
+
+# Container-level security context
+containerSecurityContext: {}
+# runAsUser: 1000
+# runAsNonRoot: true
+# allowPrivilegeEscalation: false
+
+# Init containers (e.g., for permission fixes)
+initContainers: []
+# - name: fix-permissions
+#   image: busybox:latest
+#   command: ["sh", "-c", "chown -R 1000:1000 /data"]
+#   volumeMounts:
+#     - name: data
+#       mountPath: /data
+#   securityContext:
+#     runAsUser: 0
+
+# Resource limits and requests
+resources: {}
+# requests:
+#   memory: "512Mi"
+#   cpu: "500m"
+# limits:
+#   memory: "2Gi"
+#   cpu: "2000m"
+
+# Node selector
+nodeSelector: {}
+
+# Tolerations
+tolerations: []
+
+# Service account
+serviceAccount:
+  create: false
+  name: ""
