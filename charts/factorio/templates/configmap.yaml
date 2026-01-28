@@ -6,10 +6,10 @@ metadata:
   labels:
     {{- include "game-server.labels" . | nindent 4 }}
 data:
-  {{- if hasKey .Values.gameConfig.files "server-settings.json" }}
+  {{- if index .Values.gameConfig.files "server-settings.json" }}
   {{- /* Advanced mode: User provided direct file content */}}
   server-settings.json: |
-{{ .Values.gameConfig.files."server-settings.json" | indent 4 }}
+{{ index .Values.gameConfig.files "server-settings.json" | indent 4 }}
   {{- else if .Values.gameConfig.serverSettings }}
   {{- /* User-friendly mode: Convert camelCase to snake_case and generate JSON */}}
   server-settings.json: |
