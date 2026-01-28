@@ -56,19 +56,24 @@ fi
 
 echo "✅ Factorio server started successfully and is still running"
 
-# Verify config file was mounted (if using gameConfig)
+# Verify config file was copied to writable location (if using gameConfig)
 if kubectl exec $POD -- test -f /factorio/config/server-settings.json 2>/dev/null; then
-    echo "✅ Config file mounted correctly"
-    # Verify JSON is valid
-    if kubectl exec $POD -- cat /factorio/config/server-settings.json 2>/dev/null | jq . > /dev/null 2>&1; then
-        echo "✅ server-settings.json is valid JSON"
-        # Show a snippet of the config to verify camelCase conversion
-        echo "   Server name: $(kubectl exec $POD -- cat /factorio/config/server-settings.json 2>/dev/null | jq -r .name)"
-        echo "   Max players: $(kubectl exec $POD -- cat /factorio/config/server-settings.json 2>/dev/null | jq -r .max_players)"
+    echo "✅ Config file exists at /factorio/config/server-settings.json"
+    # Verify it contains expected content (basic check without jq dependency)
+    CONFIG_CONTENT=$(kubectl exec $POD -- cat /factorio/config/server-settings.json 2>/dev/null)
+    if echo "$CONFIG_CONTENT" | grep -q '"name"' && echo "$CONFIG_CONTENT" | grep -q '"max_players"'; then
+        echo "✅ server-settings.json contains expected fields"
     else
-        echo "❌ server-settings.json is not valid JSON"
-        kubectl exec $POD -- cat /factorio/config/server-settings.json 2>/dev/null || true
+        echo "❌ server-settings.json is missing expected fields"
+        echo "$CONFIG_CONTENT"
         exit 1
+    fi
+    
+    # Verify rconpw was created (shows directory is writable)
+    if kubectl exec $POD -- test -f /factorio/config/rconpw 2>/dev/null; then
+        echo "✅ RCON password file created (config directory is writable)"
+    else
+        echo "⚠️  RCON password file not found yet (may still be initializing)"
     fi
 else
     echo "⚠️  Config file not found (may be expected if gameConfig disabled)"
