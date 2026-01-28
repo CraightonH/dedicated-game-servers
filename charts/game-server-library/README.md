@@ -94,8 +94,30 @@ Creates a PersistentVolumeClaim for game data.
 Creates a ConfigMap for game configuration files.
 
 **Features:**
-- Support for multiple config files
-- Files defined in values.yaml
+- Support for multiple config groups with arbitrary keys
+- Each config group can be enabled/disabled independently
+- Automatic file generation from `config` values in JSON or YAML format
+- Optional direct file override via `file` key
+- Automatic mounting at specified paths in the deployment
+
+**Config Group Structure:**
+Each key under `gameConfig` represents a config group and will generate a file:
+- If `configFormat: json`, generates `<key>.json`
+- If `configFormat: yaml`, generates `<key>.yaml`
+- If `file` is provided, uses the key name as-is for the filename
+
+**Example:**
+```yaml
+gameConfig:
+  server-settings:
+    enabled: true
+    mountPath: /game/config
+    configFormat: json
+    config:
+      name: "My Server"
+      max_players: 10
+  # Generates: server-settings.json mounted at /game/config/server-settings.json
+```
 
 ## Helper Functions
 
@@ -134,12 +156,21 @@ persistence:
   mountPath: /data
 
 gameConfig:
-  enabled: true
-  mountPath: /config
-  files:
-    server.properties: |
-      server-port=25565
-      motd=Welcome!
+  # Each key represents a config group (e.g., serverSettings, adminList)
+  server-properties:
+    enabled: true
+    mountPath: /config
+    configFormat: yaml  # or json
+    config:
+      server-port: 25565
+      motd: "Welcome!"
+  # Optional: Direct file override
+  admin-list:
+    enabled: true
+    mountPath: /config
+    file: |
+      admin1
+      admin2
 ```
 
 ## Example Game Chart
