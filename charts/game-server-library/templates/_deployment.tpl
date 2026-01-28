@@ -66,13 +66,16 @@ spec:
         {{- end }}
         {{- range $key, $configGroup := .Values.gameConfig }}
         {{- if and (typeIs "map[string]interface {}" $configGroup) $configGroup.enabled }}
-        {{- $filename := $key }}
+        {{- $filename := "" }}
         {{- if $configGroup.file }}
           {{- /* file override: use key as-is */}}
+          {{- $filename = $key }}
         {{- else if eq $configGroup.configFormat "json" }}
           {{- $filename = printf "%s.json" $key }}
         {{- else if eq $configGroup.configFormat "yaml" }}
           {{- $filename = printf "%s.yaml" $key }}
+        {{- else }}
+          {{- $filename = $key }}
         {{- end }}
         - name: game-config
           mountPath: {{ $configGroup.mountPath }}/{{ $filename }}
