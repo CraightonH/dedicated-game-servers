@@ -12,33 +12,62 @@ A simplified Helm chart for deploying dedicated game servers on Kubernetes. Repl
 
 ```
 dedicated-game-servers/
-├── chart/                      # Generic Helm chart (shared by all games)
-│   ├── Chart.yaml             # Chart metadata
-│   ├── values.yaml            # Template/default values
-│   └── templates/             # Kubernetes manifests
-│       ├── deployment.yaml    # Game server deployment
-│       ├── service.yaml       # NodePort service
-│       ├── pvc.yaml          # Persistent storage
-│       └── configmap-game-config.yaml  # Game configs
-├── games/                     # Game-specific configurations
-│   ├── <game-name>/
-│   │   ├── values.yaml       # Helm values for this game
-│   │   ├── README.md         # Documentation
-│   │   └── test.sh           # Automated validation (optional)
-└── .github/workflows/         # CI/CD
-    ├── helm-lint.yaml        # Syntax validation
-    └── test-games.yaml       # Deployment testing
+├── charts/                         # Helm charts
+│   ├── game-server-library/       # Library chart (shared templates)
+│   │   ├── Chart.yaml             # Library chart metadata (type: library)
+│   │   ├── values.yaml            # Default values
+│   │   └── templates/             # Named templates
+│   │       ├── _deployment.tpl    # Deployment template
+│   │       ├── _service.tpl       # Service template
+│   │       ├── _pvc.tpl          # PVC template
+│   │       └── _configmap.tpl    # ConfigMap template
+│   └── <game-name>/               # Game-specific chart
+│       ├── Chart.yaml             # Chart metadata + library dependency
+│       ├── values.yaml            # Game-specific defaults
+│       ├── templates/             # Template includes
+│       │   ├── deployment.yaml    # Include library deployment
+│       │   ├── service.yaml       # Include library service
+│       │   ├── pvc.yaml          # Include library PVC
+│       │   └── NOTES.txt         # Game-specific instructions
+│       ├── README.md              # Game documentation
+│       └── test.sh                # Automated validation
+├── docs/                          # Documentation
+│   ├── architecture-refactor-plan.md  # Architecture design
+│   ├── creating-new-game-chart.md     # Contributor guide
+│   └── VERSIONING.md              # CalVer versioning scheme
+└── .github/workflows/             # CI/CD
+    ├── helm-lint.yaml            # Syntax validation
+    ├── helm-publish.yaml         # Publish to GitHub Pages
+    └── test-games.yaml           # Deployment testing
 ```
 
-## Adding a New Game
+## Adding a New Game Chart
 
-### 1. Create Game Directory
+**See [docs/creating-new-game-chart.md](docs/creating-new-game-chart.md) for the comprehensive guide.**
+
+### Quick Overview
+
+### 1. Create Chart Directory
 
 ```bash
-mkdir -p games/<game-name>
+mkdir -p charts/<game-name>/templates
 ```
 
-### 2. Create values.yaml
+### 2. Create Chart.yaml
+
+```yaml
+apiVersion: v2
+name: <game-name>
+version: 2026.01.0  # CalVer format
+description: <Game Name> dedicated server
+type: application
+dependencies:
+  - name: game-server-library
+    version: "^2026.1.0"
+    repository: "file://../game-server-library"
+```
+
+### 3. Create values.yaml
 
 **Required fields:**
 
@@ -199,44 +228,51 @@ echo "✅ All validation checks passed!"
 
 **Make it executable:**
 ```bash
-chmod +x games/<game-name>/test.sh
+chmod +x charts/<game-name>/test.sh
 ```
 
-**Research required:**
-- What log messages indicate successful startup?
-- Where are config files stored in the container?
-- What can be tested without running a full game server?
+### 4. Create Template Files
 
-### 5. Update helm-lint.yaml
+Each template includes the library chart named template:
 
-Add linting for your game:
-
+**charts/<game-name>/templates/deployment.yaml**:
 ```yaml
-- name: Lint <game-name> values
-  run: |
-    helm lint ./chart --values ./games/<game-name>/values.yaml
+{{- include "game-server.deployment" . -}}
 ```
 
-### 6. Test Locally
+**charts/<game-name>/templates/service.yaml**:
+```yaml
+{{- include "game-server.service" . -}}
+```
 
-**Before submitting PR:**
+**charts/<game-name>/templates/pvc.yaml**:
+```yaml
+{{- include "game-server.pvc" . -}}
+```
+
+### 5. Test Locally
 
 ```bash
+# Build chart dependencies
+cd charts/<game-name>
+helm dependency build
+cd ../..
+
 # Create test cluster
 kind create cluster --name test
 
-# Deploy your game
-helm install <game-name> ./chart --values ./games/<game-name>/values.yaml
+# Deploy your game chart
+helm install <game-name>-test ./charts/<game-name>
 
 # Verify it works
 kubectl get pods -l app=<game-name>
 kubectl logs -l app=<game-name>
 
-# Run validation (if you created test.sh)
-./games/<game-name>/test.sh
+# Run validation
+./charts/<game-name>/test.sh
 
 # Cleanup
-helm uninstall <game-name>
+helm uninstall <game-name>-test
 kind delete cluster --name test
 ```
 
@@ -254,8 +290,8 @@ kind delete cluster --name test
 4. Results reported in PR
 
 **Path filtering:**
-- Changes to `chart/**` trigger tests for all games with test.sh
-- Changes to `games/<game>/**` trigger tests for only that game
+- Changes to `charts/game-server-library/**` trigger tests for all game charts
+- Changes to `charts/<game>/**` trigger tests for only that game chart
 
 ## Git Workflow
 

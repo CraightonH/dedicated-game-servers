@@ -1,20 +1,18 @@
-name: Test Game Deployments
+name: Test Game Charts
 
 on:
   pull_request:
     paths:
-      - 'chart/**'
-      - 'games/**'
+      - 'charts/**'
       - '.github/workflows/test-games.yaml'
   push:
     branches:
       - main
     paths:
-      - 'chart/**'
-      - 'games/**'
+      - 'charts/**'
 
 jobs:
-  # Detect which games were modified
+  # Detect which game charts were modified
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
@@ -25,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect changed games
+      - name: Detect changed game charts
         id: set-games
         run: |
           set -e  # Exit on error
@@ -47,27 +45,32 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED_FILES"
           
-          # Find games that have test.sh and were affected by changes
+          # Find game charts that have test.sh and were affected by changes
           GAMES_TO_TEST=()
           
-          # Check if games directory exists
-          if [ ! -d "games" ]; then
-            echo "No games directory found"
+          # Check if charts directory exists
+          if [ ! -d "charts" ]; then
+            echo "No charts directory found"
             echo "games=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
           
-          for game_dir in games/*/; do
+          for chart_dir in charts/*/; do
             # Skip if no directories found
-            [ -d "$game_dir" ] || continue
+            [ -d "$chart_dir" ] || continue
             
-            game=$(basename "$game_dir")
+            chart=$(basename "$chart_dir")
             
-            # Check if game has test.sh
-            if [ -f "games/$game/test.sh" ]; then
-              # Check if chart or this game's files changed
-              if echo "$CHANGED_FILES" | grep -q "^chart/\|^games/$game/" || [ -z "$CHANGED_FILES" ]; then
-                GAMES_TO_TEST+=("$game")
+            # Skip library chart
+            if [ "$chart" = "game-server-library" ]; then
+              continue
+            fi
+            
+            # Check if chart has test.sh
+            if [ -f "charts/$chart/test.sh" ]; then
+              # Check if library chart or this game chart changed
+              if echo "$CHANGED_FILES" | grep -q "^charts/game-server-library/\|^charts/$chart/" || [ -z "$CHANGED_FILES" ]; then
+                GAMES_TO_TEST+=("$chart")
               fi
             fi
           done
@@ -75,14 +78,14 @@ jobs:
           # Convert array to JSON for matrix
           if [ ${#GAMES_TO_TEST[@]} -eq 0 ]; then
             echo "games=[]" >> $GITHUB_OUTPUT
-            echo "No games to test"
+            echo "No game charts to test"
           else
             GAMES_JSON=$(printf '%s\n' "${GAMES_TO_TEST[@]}" | jq -R . | jq -sc . || echo '[]')
             echo "games=$GAMES_JSON" >> $GITHUB_OUTPUT
-            echo "Games to test: ${GAMES_TO_TEST[@]}"
+            echo "Game charts to test: ${GAMES_TO_TEST[@]}"
           fi
 
-  # Run tests for each changed game
+  # Run tests for each changed game chart
   test-game:
     needs: detect-changes
     if: needs.detect-changes.outputs.games != '[]'
@@ -99,6 +102,13 @@ jobs:
         uses: azure/setup-helm@v4
         with:
           version: 'latest'
+
+      - name: Build chart dependencies
+        run: |
+          echo "📦 Building dependencies for ${{ matrix.game }}..."
+          cd charts/${{ matrix.game }}
+          helm dependency build
+          cd ../..
 
       - name: Set up kind cluster
         uses: helm/kind-action@v1
@@ -119,14 +129,12 @@ jobs:
           
           echo "✅ Storage provisioner ready"
 
-      - name: Deploy ${{ matrix.game }}
+      - name: Deploy ${{ matrix.game }} chart
         run: |
-          echo "🚀 Deploying ${{ matrix.game }}..."
+          echo "🚀 Deploying ${{ matrix.game }} chart..."
           
           # Install with CI-optimized settings
-          helm install ${{ matrix.game }}-test ./chart \
-            --values ./games/${{ matrix.game }}/values.yaml \
-            --set name=${{ matrix.game }} \
+          helm install ${{ matrix.game }}-test ./charts/${{ matrix.game }} \
             --set persistence.storageClass="local-path" \
             --set persistence.size="1Gi" \
             --set resources.requests.memory="512Mi" \
@@ -143,8 +151,8 @@ jobs:
       - name: Run ${{ matrix.game }} validation
         run: |
           echo "✅ Running game-specific validation..."
-          chmod +x ./games/${{ matrix.game }}/test.sh
-          ./games/${{ matrix.game }}/test.sh
+          chmod +x ./charts/${{ matrix.game }}/test.sh
+          ./charts/${{ matrix.game }}/test.sh
 
       - name: Get pod logs on failure
         if: failure()

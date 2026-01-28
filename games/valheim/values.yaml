@@ -1,8 +1,0 @@
-# Valheim Dedicated Server Configuration
-# Coming soon!
-
-# Example structure (not yet functional):
-# name: "valheim"
-# image:
-#   repository: lloesche/valheim-server
-#   tag: "latest"
