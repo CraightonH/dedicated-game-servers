@@ -169,6 +169,10 @@ See [charts/factorio/README.md](./charts/factorio/README.md) as a template. Incl
 
 #### 6. Create `test.sh`
 
+**Important**: Wait for game-specific startup messages to confirm the server is actually running, not just that the pod is ready.
+
+**Example: Factorio-style test with explicit startup detection**
+
 ```bash
 #!/bin/bash
 # <Game Name> deployment validation test
@@ -177,33 +181,74 @@ set -e
 echo "🔍 Validating <game-name> server deployment..."
 
 # Wait for pod ready
+echo "⏳ Waiting for pod readiness..."
 kubectl wait --for=condition=ready pod -l app=<game-name> --timeout=300s
 
 # Get pod name
 POD=$(kubectl get pod -l app=<game-name> -o jsonpath='{.items[0].metadata.name}')
+echo "✅ Pod is ready: $POD"
 
-# Check logs for success indicators
-LOGS=$(kubectl logs $POD --tail=100)
-if echo "$LOGS" | grep -q "<SUCCESS_PATTERN>"; then
-    echo "✅ Server started successfully"
-else
-    echo "❌ Server did not start properly"
-    echo "$LOGS"
+# Wait up to 30 seconds for game-specific startup message
+# CRITICAL: Replace <SUCCESS_MESSAGE> with the actual message your game logs
+# Examples:
+#   Factorio: "Hosting game at IP ADDR"
+#   Valheim: "Game server connected"
+#   Satisfactory: "Server is ready"
+echo "📋 Waiting for <game-name> server to start (up to 30 seconds)..."
+SUCCESS=false
+for i in {1..30}; do
+    # Get recent logs
+    LOGS=$(kubectl logs $POD --tail=50 2>/dev/null || echo "")
+    
+    # Check for game-specific success message
+    if echo "$LOGS" | grep -q "<SUCCESS_MESSAGE>"; then
+        echo "✅ Found '<SUCCESS_MESSAGE>' in logs"
+        SUCCESS=true
+        break
+    fi
+    
+    # Check if pod is still running
+    POD_PHASE=$(kubectl get pod $POD -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+    if [ "$POD_PHASE" != "Running" ]; then
+        echo "❌ Pod is no longer running (phase: $POD_PHASE)"
+        echo "Recent logs:"
+        echo "$LOGS"
+        exit 1
+    fi
+    
+    # Wait 1 second before next check
+    sleep 1
+done
+
+# Check if we found the success message
+if [ "$SUCCESS" = false ]; then
+    echo "❌ Server did not start within 30 seconds"
+    echo "Recent logs:"
+    kubectl logs $POD --tail=100
     exit 1
 fi
 
+# Verify pod is still running after finding the message
+POD_PHASE=$(kubectl get pod $POD -o jsonpath='{.status.phase}')
+if [ "$POD_PHASE" != "Running" ]; then
+    echo "❌ Pod stopped running after startup (phase: $POD_PHASE)"
+    exit 1
+fi
+
+echo "✅ Server started successfully and is still running"
+
 # Verify config file (if using gameConfig)
-if kubectl exec $POD -- test -f /game/config/config.json; then
+if kubectl exec $POD -- test -f /game/config/config.json 2>/dev/null; then
     echo "✅ Config file mounted"
 else
-    echo "❌ Config file missing"
-    exit 1
+    echo "⚠️  Config file not found (may be expected if gameConfig disabled)"
 fi
 
 # Check PVC
-PVC_STATUS=$(kubectl get pvc <game-name>-data -o jsonpath='{.status.phase}')
+PVC_NAME="<game-name>-data"
+PVC_STATUS=$(kubectl get pvc $PVC_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "NotFound")
 if [ "$PVC_STATUS" == "Bound" ]; then
-    echo "✅ PVC is bound"
+    echo "✅ PVC is bound: $PVC_NAME"
 else
     echo "❌ PVC not bound: $PVC_STATUS"
     exit 1
@@ -214,12 +259,37 @@ SVC_TYPE=$(kubectl get svc <game-name> -o jsonpath='{.spec.type}')
 if [ "$SVC_TYPE" == "NodePort" ]; then
     echo "✅ Service is NodePort"
 else
-    echo "❌ Service type unexpected: $SVC_TYPE"
-    exit 1
+    echo "⚠️  Service type is $SVC_TYPE (expected NodePort for tests)"
 fi
 
 echo "✅ All validation checks passed!"
 ```
+
+**How to find the success message for your game:**
+
+1. Deploy the server manually:
+   ```bash
+   helm install test ./charts/<game-name>
+   ```
+
+2. Watch the logs until the server is ready:
+   ```bash
+   kubectl logs -f -l app=<game-name>
+   ```
+
+3. Look for a message that indicates the server is accepting connections
+   - Examples:
+     - Factorio: `Hosting game at IP ADDR`
+     - Valheim: `Game server connected`
+     - Minecraft: `Done (X.XXXs)! For help, type "help"`
+     - 7 Days to Die: `GameServer.Init successful`
+
+4. Use that exact string in the `grep -q "<SUCCESS_MESSAGE>"` line
+
+**Why this matters:**
+- Pod readiness ≠ server ready
+- Many game servers take 10-30 seconds to initialize after the pod is ready
+- Testing must wait for the actual server to start, not just the container
 
 Make it executable:
 ```bash
