@@ -38,14 +38,20 @@ To connect to your Factorio server:
 
 {{- end }}
 
+{{- if .Values.gameConfig.serverSettings }}
+
 Configuration:
-- Server Name: {{ (index (.Values.gameConfig.files) "server-settings.json" | fromJson).name }}
-- Max Players: {{ (index (.Values.gameConfig.files) "server-settings.json" | fromJson).max_players }}
-- Auto-pause: {{ (index (.Values.gameConfig.files) "server-settings.json" | fromJson).auto_pause }}
+- Server Name: {{ .Values.gameConfig.serverSettings.name }}
+- Max Players: {{ .Values.gameConfig.serverSettings.maxPlayers }}
+- Auto-pause: {{ .Values.gameConfig.serverSettings.autoPause }}
 
 To customize your server:
   helm upgrade {{ .Release.Name }} dedicated-game-servers/factorio \
-    --set gameConfig.files."server-settings\.json".name="My Custom Server Name"
+    --set gameConfig.serverSettings.name="My Custom Server Name" \
+    --set gameConfig.serverSettings.maxPlayers=20
+
+{{- end }}
 
 For more information, visit:
-  https://github.com/CraightonH/dedicated-game-servers/tree/main/charts/factorio
+- Chart documentation: https://github.com/CraightonH/dedicated-game-servers/blob/main/charts/factorio/README.md
+- Factorio wiki: https://wiki.factorio.com/Multiplayer
