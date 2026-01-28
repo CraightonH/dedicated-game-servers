@@ -1,0 +1,106 @@
+# Factorio Dedicated Server Configuration
+
+# Server identity
+name: factorio
+
+# Factorio Docker image
+# Using rootless variant to avoid NFS permission issues
+# See: https://github.com/factoriotools/factorio-docker/blob/master/PERMISSION_ISSUES_GUIDE.md
+image:
+  repository: factoriotools/factorio
+  tag: stable-rootless  # Runs as UID 1000, avoids permission issues
+  pullPolicy: IfNotPresent
+
+# Resource allocation
+resources:
+  requests:
+    memory: 2Gi
+    cpu: 1000m
+  limits:
+    memory: 4Gi
+    cpu: 2000m
+
+# Persistent storage for saves and mods
+persistence:
+  enabled: true
+  storageClass: nfs-client  # Change to your storage class
+  size: 50Gi
+  mountPath: /factorio
+
+# Network configuration (NodePort for home cluster access)
+service:
+  type: NodePort
+  ports:
+    - name: game
+      port: 34197
+      nodePort: 30197  # Change if port is already in use
+      protocol: UDP
+    - name: rcon
+      port: 27015
+      nodePort: 30015  # Change if port is already in use
+      protocol: TCP
+
+# Environment variables
+env:
+  - name: UPDATE_MODS_ON_START
+    value: "false"  # Set to "true" to auto-update mods
+  - name: SAVE_NAME
+    value: "save1"  # Name of the save file
+  - name: GENERATE_NEW_SAVE
+    value: "false"  # Set to "true" to create new world on first start
+
+# Factorio server settings (server-settings.json)
+# Documentation: https://wiki.factorio.com/Multiplayer#Setting_up_a_multiplayer_game
+gameConfig:
+  enabled: true
+  mountPath: /factorio/config
+  files:
+    server-settings.json: |
+      {
+        "name": "My Factorio Server",
+        "description": "A Factorio server running on Kubernetes",
+        "tags": ["game", "tags"],
+        "max_players": 10,
+        "visibility": {
+          "public": false,
+          "lan": true
+        },
+        "username": "",
+        "password": "",
+        "token": "",
+        "game_password": "",
+        "require_user_verification": false,
+        "max_upload_in_kilobytes_per_second": 0,
+        "max_upload_slots": 5,
+        "minimum_latency_in_ticks": 0,
+        "ignore_player_limit_for_returning_players": false,
+        "allow_commands": "admins-only",
+        "autosave_interval": 10,
+        "autosave_slots": 5,
+        "afk_autokick_interval": 0,
+        "auto_pause": true,
+        "only_admins_can_pause_the_game": true,
+        "autosave_only_on_server": true,
+        "non_blocking_saving": false,
+        "minimum_segment_size": 25,
+        "minimum_segment_size_peer_count": 20,
+        "maximum_segment_size": 100,
+        "maximum_segment_size_peer_count": 10
+      }
+
+# Pod-level security context (no runAsNonRoot to allow init container)
+podSecurityContext:
+  fsGroup: 1000  # rootless image runs as UID 1000
+
+# Container-level security context
+containerSecurityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+
+# Optional: Pin to specific node (e.g., node with more RAM)
+nodeSelector: {}
+  # kubernetes.io/hostname: node1
+
+# Optional: Tolerations
+tolerations: []

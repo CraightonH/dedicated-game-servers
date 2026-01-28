@@ -1,0 +1,51 @@
+Thank you for installing {{ .Chart.Name }}!
+
+Your Factorio server is being deployed.
+
+To check the status:
+  kubectl get pods -l app={{ .Values.name }}
+
+To view the logs:
+  kubectl logs -f -l app={{ .Values.name }}
+
+{{- if eq .Values.service.type "NodePort" }}
+
+To connect to your Factorio server:
+
+1. Get the node IP where the pod is running:
+   kubectl get pod -l app={{ .Values.name }} -o wide
+
+2. Connect in Factorio:
+   {{- range .Values.service.ports }}
+   {{- if eq .name "game" }}
+   - Game Port: <node-ip>:{{ .nodePort }} ({{ .protocol }})
+   {{- end }}
+   {{- if eq .name "rcon" }}
+   - RCON Port: <node-ip>:{{ .nodePort }} ({{ .protocol }})
+   {{- end }}
+   {{- end }}
+
+{{- else if eq .Values.service.type "LoadBalancer" }}
+
+To connect to your Factorio server:
+
+1. Get the external IP:
+   kubectl get svc {{ .Values.name }}
+
+2. Wait for EXTERNAL-IP to be assigned
+
+3. Connect in Factorio using the EXTERNAL-IP and port {{ (index .Values.service.ports 0).port }}
+
+{{- end }}
+
+Configuration:
+- Server Name: {{ (index (.Values.gameConfig.files) "server-settings.json" | fromJson).name }}
+- Max Players: {{ (index (.Values.gameConfig.files) "server-settings.json" | fromJson).max_players }}
+- Auto-pause: {{ (index (.Values.gameConfig.files) "server-settings.json" | fromJson).auto_pause }}
+
+To customize your server:
+  helm upgrade {{ .Release.Name }} dedicated-game-servers/factorio \
+    --set gameConfig.files."server-settings\.json".name="My Custom Server Name"
+
+For more information, visit:
+  https://github.com/CraightonH/dedicated-game-servers/tree/main/charts/factorio

@@ -1,0 +1,27 @@
+apiVersion: v2
+name: factorio
+description: Factorio dedicated server on Kubernetes
+type: application
+version: 1.0.0
+appVersion: "2.0"
+
+keywords:
+  - games
+  - factorio
+  - dedicated-server
+
+home: https://github.com/CraightonH/dedicated-game-servers
+sources:
+  - https://github.com/CraightonH/dedicated-game-servers
+  - https://github.com/factoriotools/factorio-docker
+
+icon: https://cdn-icons-png.flaticon.com/32/8674/8674162.png
+
+maintainers:
+  - name: CraightonH
+    url: https://github.com/CraightonH
+
+dependencies:
+  - name: game-server-library
+    version: "1.0.0"
+    repository: "file://../game-server-library"
