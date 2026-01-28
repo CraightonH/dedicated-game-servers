@@ -39,7 +39,7 @@ description: <Game Name> dedicated server
 type: application
 dependencies:
   - name: game-server-library
-    version: "^2026.1.0"  # Use semver range
+    version: "^2026.01.1"  # Use semver range
     repository: "file://../game-server-library"
 ```
 
@@ -89,14 +89,13 @@ resources:
 
 # Game configuration files (if needed)
 gameConfig:
-  enabled: true
-  mountPath: /game/config
-  files:
-    config.json: |
-      {
-        "serverName": "My Server",
-        "maxPlayers": 10
-      }
+  server-config:
+    enabled: true
+    mountPath: /game/config
+    configFormat: json
+    config:
+      serverName: "My Server"
+      maxPlayers: 10
 
 # Environment variables (if needed)
 env:

@@ -63,7 +63,7 @@ description: <Game Name> dedicated server
 type: application
 dependencies:
   - name: game-server-library
-    version: "^2026.1.0"
+    version: "^2026.01.1"
     repository: "file://../game-server-library"
 ```
 
@@ -102,11 +102,12 @@ resources:
 
 # If game needs config files:
 gameConfig:
-  enabled: true
-  mountPath: "/path/in/container"
-  files:
-    config-file.json: |
-      { "setting": "value" }
+  config-file:
+    enabled: true
+    mountPath: "/path/in/container"
+    configFormat: json
+    config:
+      setting: "value"
 
 # Environment variables (if needed):
 env:
@@ -352,17 +353,28 @@ Use `gameConfig` to generate config files from Helm values:
 
 ```yaml
 gameConfig:
-  enabled: true
-  mountPath: "/game/config"
-  files:
-    server.json: |
-      {
-        "serverName": "{{ .Values.serverName }}",
-        "maxPlayers": {{ .Values.maxPlayers }}
-      }
+  server:
+    enabled: true
+    mountPath: "/game/config"
+    configFormat: json
+    config:
+      serverName: "{{ .Values.serverName }}"
+      maxPlayers: {{ .Values.maxPlayers }}
 ```
 
 The chart will create a ConfigMap and mount files at the specified path.
+
+For direct file control, use `file` instead of `config`:
+
+```yaml
+gameConfig:
+  admin-list:
+    enabled: true
+    mountPath: "/game/config"
+    file: |
+      admin1
+      admin2
+```
 
 ### NodePort Selection
 
