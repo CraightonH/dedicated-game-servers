@@ -1,0 +1,6 @@
+dependencies:
+- name: game-server-library
+  repository: file://../game-server-library
+  version: 2026.01.0
+digest: sha256:de51587da6a444ce2b4e20577a804de0414a8d3ad713680a1f50297196b9aab6
+generated: "2026-01-28T06:49:42.530358531Z"
