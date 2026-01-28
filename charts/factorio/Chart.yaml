@@ -25,3 +25,5 @@ dependencies:
   - name: game-server-library
     version: "2026.01.0"
     repository: "file://../game-server-library"
+
+# Trigger publish workflow with fixed gh-pages handling
