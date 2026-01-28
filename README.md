@@ -1,21 +1,20 @@
 # Dedicated Game Servers
 
-A simple Helm chart for deploying dedicated game servers on Kubernetes.
+Simple Helm charts for deploying dedicated game servers on Kubernetes.
 
-## Purpose
+## Overview
 
-This chart provides a straightforward way to deploy and manage dedicated game servers without the complexity of a custom operator. It handles:
+This repository provides a collection of Helm charts for easily deploying game servers on Kubernetes using a shared library chart architecture.
 
-- Deploying game server containers
-- Generating game-specific configuration files
-- Persistent storage for save data
-- NodePort services for network access
+**Design philosophy**: Deployment simplicity over lifecycle automation.
 
 ## Supported Games
 
-- **Factorio** - Factory building and automation
-- Valheim _(coming soon)_
-- Satisfactory _(coming soon)_
+| Game | Chart | Description |
+|------|-------|-------------|
+| **Factorio** | `dedicated-game-servers/factorio` | Factory building and automation |
+| Valheim | _coming soon_ | Viking survival |
+| Satisfactory | _coming soon_ | Factory building in 3D |
 
 ## Quick Start
 
@@ -26,95 +25,163 @@ helm repo add dedicated-game-servers https://craightonh.github.io/dedicated-game
 helm repo update
 ```
 
-### Install Factorio Server
+### Browse Available Games
 
 ```bash
-# From the Helm repository (recommended)
-helm install factorio dedicated-game-servers/game-server \
-  --values https://raw.githubusercontent.com/CraightonH/dedicated-game-servers/main/games/factorio/values.yaml \
-  --set factorio.serverName="My Factorio Server" \
-  --set factorio.password="changeme"
-
-# Or from local clone
-helm install factorio ./chart \
-  --values ./games/factorio/values.yaml \
-  --set factorio.serverName="My Factorio Server" \
-  --set factorio.password="changeme"
+helm search repo dedicated-game-servers
 ```
 
-### Customize Settings
+### Install a Game Server
 
-Each game has a `values.yaml` file in `games/<game-name>/` with game-specific settings. Copy and modify to suit your needs:
+#### Factorio
 
 ```bash
-cp games/factorio/values.yaml my-factorio.yaml
-# Edit my-factorio.yaml with your preferences
-helm install factorio ./chart --values my-factorio.yaml
+# Basic installation (works out of the box)
+helm install factorio dedicated-game-servers/factorio
+
+# With custom server name
+helm install factorio dedicated-game-servers/factorio \
+  --set gameConfig.files.server-settings\.json.name="My Factory"
+
+# With custom values file
+helm install factorio dedicated-game-servers/factorio -f my-values.yaml
 ```
 
-## Structure
+See [charts/factorio/README.md](./charts/factorio/README.md) for full configuration options.
+
+## Architecture
+
+This repository uses a **library chart + per-game chart** architecture:
 
 ```
 dedicated-game-servers/
-├── chart/              # Main Helm chart
-│   ├── Chart.yaml
-│   ├── values.yaml     # Default values (template)
-│   └── templates/      # Kubernetes manifests
-└── games/              # Game-specific configurations
-    ├── factorio/
-    │   ├── values.yaml
-    │   ├── README.md
-    │   └── test.sh     # Automated validation
-    └── valheim/
-        ├── values.yaml
-        └── README.md
+├── charts/
+│   ├── game-server-library/     # Shared templates (Deployment, Service, PVC, etc.)
+│   │   ├── Chart.yaml           # type: library
+│   │   └── templates/           # Reusable named templates
+│   ├── factorio/                # Factorio-specific chart
+│   │   ├── Chart.yaml           # depends: game-server-library
+│   │   ├── values.yaml          # Factorio defaults
+│   │   └── templates/           # Uses library templates
+│   └── <game>/                  # Additional game charts
+└── docs/                        # Documentation
 ```
+
+**Benefits**:
+- **Simple deployment**: `helm install factorio dedicated-game-servers/factorio` just works
+- **Discoverable**: `helm search` shows all available games
+- **Maintainable**: Common logic lives in the library chart
+- **Independent versioning**: Each game can release at its own pace
 
 ## How It Works
 
-1. The Helm chart templates deploy:
-   - A Deployment with your game server container
-   - A PersistentVolumeClaim for save data
-   - A ConfigMap with game-specific configuration
-   - A NodePort Service for network access
+Each game chart uses the [game-server-library](./charts/game-server-library) to deploy:
+- **Deployment**: Single replica with Recreate strategy (game servers can't be scaled)
+- **Service**: NodePort (for home clusters) or LoadBalancer
+- **PersistentVolumeClaim**: For save data and game files
+- **ConfigMap**: For game-specific configuration files
 
-2. Game configs are generated from Helm values and mounted into the container
-
-3. Save data persists across pod restarts
+The library chart provides reusable templates, and each game chart provides sensible defaults.
 
 ## Configuration
 
-See individual game READMEs in `games/<game-name>/` for detailed configuration options.
+### Per-Game Documentation
 
-## Testing
+See individual game chart READMEs for detailed configuration:
+- [Factorio](./charts/factorio/README.md)
 
-Each game includes a `test.sh` script that validates deployments. CI/CD automatically:
-- Detects which games changed in your PR
-- Deploys to a test Kubernetes cluster (kind)
-- Runs game-specific validation
-- Reports pass/fail status
+### Common Patterns
 
-See [games/README.md](./games/README.md) for testing details.
+All game charts support these common options:
+
+```yaml
+# Kubernetes resource name
+name: my-server
+
+# Docker image
+image:
+  repository: <game-image>
+  tag: stable
+  pullPolicy: IfNotPresent
+
+# Service configuration
+service:
+  type: NodePort  # or LoadBalancer, ClusterIP
+  ports:
+    - name: game
+      port: <game-port>
+      nodePort: 30000  # 30000-32767 for NodePort
+      protocol: UDP    # or TCP
+
+# Persistent storage
+persistence:
+  enabled: true
+  size: 10Gi
+  storageClass: nfs-client  # or your cluster's storage class
+  mountPath: /data
+
+# Resources
+resources:
+  requests:
+    memory: 2Gi
+    cpu: 1000m
+  limits:
+    memory: 4Gi
+    cpu: 2000m
+
+# Security context
+podSecurityContext:
+  fsGroup: 1000
+containerSecurityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+
+# Game configuration files (optional)
+gameConfig:
+  enabled: true
+  mountPath: /game/config
+  files:
+    config.json: |
+      { "setting": "value" }
+
+# Environment variables (optional)
+env:
+  - name: ENV_VAR
+    value: "value"
+```
+
+## CI/CD & Testing
+
+This repository includes automated testing:
+- **Helm Lint**: Validates chart syntax
+- **Deployment Tests**: Deploys charts to kind cluster
+- **Game Validation**: Runs game-specific health checks
+
+Tests run automatically on PRs for changed games.
 
 ## Why Not an Operator?
 
-This project started as a Kubernetes operator (boilerr) but was simplified to a Helm chart because:
+This project was originally a Kubernetes operator ([boilerr](https://github.com/CraightonH/boilerr)) but was simplified to Helm charts because:
 
-- The primary need was **deployment**, not lifecycle management
-- Advanced features (auto-updates, backups) were low priority
-- A Helm chart is simpler to maintain and understand
-- It's easier to add new games (just add a values file)
+- Primary need was **deployment**, not complex lifecycle management
+- Helm charts are simpler to maintain and understand
+- Adding new games is trivial (create a new chart directory)
+- Advanced automation features (auto-updates, backups) were low priority
 
-If you need advanced automation, consider [boilerr](https://github.com/CraightonH/boilerr).
+If you need advanced lifecycle management, check out [boilerr](https://github.com/CraightonH/boilerr).
 
 ## Contributing
 
-To add a new game:
+We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to:
+- Add a new game chart
+- Improve existing charts
+- Submit pull requests
 
-1. Create `games/<game-name>/` directory
-2. Add `values.yaml` with game-specific settings
-3. Add `README.md` documenting the configuration options
-4. Test deployment
+For detailed guidance on creating game charts, see [docs/creating-new-game-chart.md](./docs/creating-new-game-chart.md).
+
+## Versioning
+
+This repository uses **Calendar Versioning (CalVer)** for chart versions. See [docs/VERSIONING.md](./docs/VERSIONING.md) for details.
 
 ## License
 
