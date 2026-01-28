@@ -39,12 +39,24 @@ persistence:
   mountPath: "/data"
 
 # Game-specific configuration files
-gameConfig:
-  enabled: false
-  mountPath: "/config"
-  files: {}
-  # example-config.json: |
-  #   { "setting": "value" }
+# Each key under gameConfig represents a config group (e.g., serverSettings, adminList)
+# that will be templated as a file and mounted into the container
+gameConfig: {}
+  # serverSettings:
+  #   enabled: true
+  #   mountPath: "/config"
+  #   configFormat: json  # or yaml
+  #   config:
+  #     name: "My Server"
+  #     description: "Server description"
+  #     maxPlayers: 10
+  # # Or use file for full override:
+  # adminList:
+  #   enabled: true
+  #   mountPath: "/config"
+  #   file: |
+  #     admin1
+  #     admin2
 
 # Pod-level security context
 podSecurityContext: {}

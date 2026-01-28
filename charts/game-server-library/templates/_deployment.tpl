@@ -20,7 +20,7 @@ spec:
     metadata:
       labels:
         {{- include "game-server.selectorLabels" . | nindent 8 }}
-      {{- if .Values.gameConfig.enabled }}
+      {{- if .Values.gameConfig }}
       annotations:
         checksum/config: {{ include "game-server.configmap" . | sha256sum }}
       {{- end }}
@@ -64,10 +64,21 @@ spec:
         - name: data
           mountPath: {{ .Values.persistence.mountPath }}
         {{- end }}
-        {{- if .Values.gameConfig.enabled }}
-        {{- range $filename, $content := .Values.gameConfig.files }}
+        {{- range $key, $configGroup := .Values.gameConfig }}
+        {{- if and (typeIs "map[string]interface {}" $configGroup) $configGroup.enabled }}
+        {{- $filename := "" }}
+        {{- if $configGroup.file }}
+          {{- /* file override: use key as-is */}}
+          {{- $filename = $key }}
+        {{- else if eq $configGroup.configFormat "json" }}
+          {{- $filename = printf "%s.json" $key }}
+        {{- else if eq $configGroup.configFormat "yaml" }}
+          {{- $filename = printf "%s.yaml" $key }}
+        {{- else }}
+          {{- $filename = $key }}
+        {{- end }}
         - name: game-config
-          mountPath: {{ $.Values.gameConfig.mountPath }}/{{ $filename }}
+          mountPath: {{ $configGroup.mountPath }}/{{ $filename }}
           subPath: {{ $filename }}
         {{- end }}
         {{- end }}
@@ -81,7 +92,13 @@ spec:
         persistentVolumeClaim:
           claimName: {{ .Values.name }}-data
       {{- end }}
-      {{- if .Values.gameConfig.enabled }}
+      {{- $hasEnabledConfigs := false }}
+      {{- range $key, $configGroup := $.Values.gameConfig }}
+        {{- if and (typeIs "map[string]interface {}" $configGroup) $configGroup.enabled }}
+          {{- $hasEnabledConfigs = true }}
+        {{- end }}
+      {{- end }}
+      {{- if $hasEnabledConfigs }}
       - name: game-config
         configMap:
           name: {{ .Values.name }}-config

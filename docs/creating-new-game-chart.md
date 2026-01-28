@@ -192,17 +192,23 @@ resources:
 # Game-specific configuration files
 # Only include if the game needs config files
 gameConfig:
-  enabled: true
-  mountPath: /game/config  # Where to mount in container
-  files:
-    # Example: server config file
-    server.json: |
-      {
-        "serverName": "My Server",
-        "maxPlayers": 10,
-        "password": "",
-        "public": false
-      }
+  # Each key under gameConfig represents a config group
+  # The key name becomes the filename (with .json or .yaml extension based on configFormat)
+  server-config:
+    enabled: true
+    mountPath: /game/config  # Where to mount in container
+    configFormat: json  # or yaml
+    config:
+      serverName: "My Server"
+      maxPlayers: 10
+      password: ""
+      public: false
+    # Or use 'file' for direct control:
+    # file: |
+    #   {
+    #     "serverName": "My Server",
+    #     "maxPlayers": 10
+    #   }
 
 # Environment variables (if the container uses them)
 env: []
@@ -367,7 +373,7 @@ See [Factorio README](../charts/factorio/README.md) as a template.
 | `service.type` | Service type | `NodePort` |
 | `service.ports[0].nodePort` | External game port | `30XXX` |
 | `persistence.size` | PVC size | `10Gi` |
-| `gameConfig.files.<file>.serverName` | Server name | `My Server` |
+| `gameConfig.server-config.config.serverName` | Server name | `My Server` |
 ```
 
 ### Step 8: Create `test.sh`
@@ -661,15 +667,23 @@ git push -u origin feat/add-<game-name>
 
 ```yaml
 gameConfig:
-  enabled: true
-  mountPath: /game/config
-  files:
-    server-settings.json: |
-      { "name": "Server" }
-    admin-list.txt: |
+  server-settings:
+    enabled: true
+    mountPath: /game/config
+    configFormat: json
+    config:
+      name: "Server"
+      max_players: 10
+  admin-list:
+    enabled: true
+    mountPath: /game/config
+    file: |
       player1
       player2
-    banned-players.txt: ""
+  banned-players:
+    enabled: false
+    mountPath: /game/config
+    file: ""
 ```
 
 ### Init Containers
