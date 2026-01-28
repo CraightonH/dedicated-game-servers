@@ -3,7 +3,59 @@ entries:
   factorio:
   - apiVersion: v2
     appVersion: "2.0"
-    created: "2026-01-28T21:56:53.207752798Z"
+    created: "2026-01-28T22:32:15.563814373Z"
+    dependencies:
+    - name: game-server-library
+      repository: file://../game-server-library
+      version: 2026.01.1
+    description: Factorio dedicated server on Kubernetes
+    digest: ece0a1b5fd952ea25c4147a230598fa3cc9e0acc6b104ef72d694c44dbc7e025
+    home: https://github.com/CraightonH/dedicated-game-servers
+    icon: https://cdn-icons-png.flaticon.com/32/8674/8674162.png
+    keywords:
+    - games
+    - factorio
+    - dedicated-server
+    maintainers:
+    - name: CraightonH
+      url: https://github.com/CraightonH
+    name: factorio
+    sources:
+    - https://github.com/CraightonH/dedicated-game-servers
+    - https://github.com/factoriotools/factorio-docker
+    type: application
+    urls:
+    - https://craightonh.github.io/dedicated-game-servers/factorio-2026.01.3.tgz
+    version: 2026.01.3
+  - apiVersion: v2
+    appVersion: "2.0"
+    created: "2026-01-28T22:32:15.566844663Z"
+    dependencies:
+    - name: game-server-library
+      repository: file://../game-server-library
+      version: 2026.01.1
+    description: Factorio dedicated server on Kubernetes
+    digest: ece0a1b5fd952ea25c4147a230598fa3cc9e0acc6b104ef72d694c44dbc7e025
+    home: https://github.com/CraightonH/dedicated-game-servers
+    icon: https://cdn-icons-png.flaticon.com/32/8674/8674162.png
+    keywords:
+    - games
+    - factorio
+    - dedicated-server
+    maintainers:
+    - name: CraightonH
+      url: https://github.com/CraightonH
+    name: factorio
+    sources:
+    - https://github.com/CraightonH/dedicated-game-servers
+    - https://github.com/factoriotools/factorio-docker
+    type: application
+    urls:
+    - https://craightonh.github.io/dedicated-game-servers/.cr-release-packages/factorio-2026.01.3.tgz
+    version: 2026.01.3
+  - apiVersion: v2
+    appVersion: "2.0"
+    created: "2026-01-28T22:32:15.562890209Z"
     dependencies:
     - name: game-server-library
       repository: file://../game-server-library
@@ -29,33 +81,7 @@ entries:
     version: 2026.01.2
   - apiVersion: v2
     appVersion: "2.0"
-    created: "2026-01-28T21:56:53.211633996Z"
-    dependencies:
-    - name: game-server-library
-      repository: file://../game-server-library
-      version: 2026.01.1
-    description: Factorio dedicated server on Kubernetes
-    digest: b9440374635963668cd73b0735a1b996884015ea57c6daef4085610d9e36e3c8
-    home: https://github.com/CraightonH/dedicated-game-servers
-    icon: https://cdn-icons-png.flaticon.com/32/8674/8674162.png
-    keywords:
-    - games
-    - factorio
-    - dedicated-server
-    maintainers:
-    - name: CraightonH
-      url: https://github.com/CraightonH
-    name: factorio
-    sources:
-    - https://github.com/CraightonH/dedicated-game-servers
-    - https://github.com/factoriotools/factorio-docker
-    type: application
-    urls:
-    - https://craightonh.github.io/dedicated-game-servers/.cr-release-packages/factorio-2026.01.2.tgz
-    version: 2026.01.2
-  - apiVersion: v2
-    appVersion: "2.0"
-    created: "2026-01-28T21:56:53.206725583Z"
+    created: "2026-01-28T22:32:15.562003715Z"
     dependencies:
     - name: game-server-library
       repository: file://../game-server-library
@@ -81,7 +107,7 @@ entries:
     version: 2026.01.1
   - apiVersion: v2
     appVersion: "2.0"
-    created: "2026-01-28T21:56:53.205593042Z"
+    created: "2026-01-28T22:32:15.561076575Z"
     dependencies:
     - name: game-server-library
       repository: file://../game-server-library
@@ -108,7 +134,7 @@ entries:
   game-server:
   - apiVersion: v2
     appVersion: 2026.01.0
-    created: "2026-01-28T21:56:53.209020942Z"
+    created: "2026-01-28T22:32:15.564975216Z"
     description: A Helm chart for deploying dedicated game servers on Kubernetes
     digest: 588af82eb216f72e3ee3f8876da12e74a2bd170c47070f7ce4923663b83247c1
     home: https://github.com/CraightonH/dedicated-game-servers
@@ -131,7 +157,7 @@ entries:
     version: 2026.01.0
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-28T21:56:53.208740138Z"
+    created: "2026-01-28T22:32:15.564665361Z"
     description: A Helm chart for deploying dedicated game servers on Kubernetes
     digest: 4ec5666a0e974d5f138dd49fb9b7fb97725f3f83cdcc1dcf75434598ff1646d3
     home: https://github.com/CraightonH/dedicated-game-servers
@@ -154,7 +180,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-28T21:56:53.208450889Z"
+    created: "2026-01-28T22:32:15.564377657Z"
     description: A Helm chart for deploying dedicated game servers on Kubernetes
     digest: 2c8a1eae99e3108fe8885de9a3a83718476f71c2bee72b5e39ee598380614685
     home: https://github.com/CraightonH/dedicated-game-servers
@@ -177,7 +203,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-01-28T21:56:53.208100095Z"
+    created: "2026-01-28T22:32:15.564095314Z"
     description: A Helm chart for deploying dedicated game servers on Kubernetes
     digest: d7ccf124fc73d2459a7ad7f04f911c7e2bc591e17cde7070b85e62ef8dc51df4
     home: https://github.com/CraightonH/dedicated-game-servers
@@ -201,9 +227,9 @@ entries:
   game-server-library:
   - apiVersion: v2
     appVersion: 2026.01.1
-    created: "2026-01-28T21:56:53.210053537Z"
+    created: "2026-01-28T22:32:15.565623278Z"
     description: A library chart for common game server resources
-    digest: 89ac734641bf24b0fc5e04d0d918d87f042116005f17fef600c4346d0c841c08
+    digest: 4d5c5d5c4e750836f0b2e1eaf8702046e83fa317558edd2b2892f91a4575d337
     home: https://github.com/CraightonH/dedicated-game-servers
     keywords:
     - games
@@ -221,9 +247,9 @@ entries:
     version: 2026.01.1
   - apiVersion: v2
     appVersion: 2026.01.1
-    created: "2026-01-28T21:56:53.212043129Z"
+    created: "2026-01-28T22:32:15.567526958Z"
     description: A library chart for common game server resources
-    digest: 89ac734641bf24b0fc5e04d0d918d87f042116005f17fef600c4346d0c841c08
+    digest: 4d5c5d5c4e750836f0b2e1eaf8702046e83fa317558edd2b2892f91a4575d337
     home: https://github.com/CraightonH/dedicated-game-servers
     keywords:
     - games
@@ -241,7 +267,7 @@ entries:
     version: 2026.01.1
   - apiVersion: v2
     appVersion: 2026.01.0
-    created: "2026-01-28T21:56:53.209513941Z"
+    created: "2026-01-28T22:32:15.565304376Z"
     description: A library chart for common game server resources
     digest: 9b323c2c7558a86ced16d4df97185e38087f059186da316987d4f33943e022d5
     home: https://github.com/CraightonH/dedicated-game-servers
@@ -259,4 +285,4 @@ entries:
     urls:
     - https://craightonh.github.io/dedicated-game-servers/game-server-library-2026.01.0.tgz
     version: 2026.01.0
-generated: "2026-01-28T21:56:53.203968904Z"
+generated: "2026-01-28T22:32:15.559284719Z"
