@@ -1,0 +1,90 @@
+name: Chart Version Check
+
+on:
+  pull_request:
+    paths:
+      - 'charts/**'
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Check chart versions were bumped
+        run: |
+          set -e
+          
+          echo "🔍 Checking for chart changes that require version bumps..."
+          
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }})
+          
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          echo ""
+          
+          ERRORS=0
+          
+          # Check each chart directory
+          for chart_dir in charts/*/; do
+            [ -d "$chart_dir" ] || continue
+            chart=$(basename "$chart_dir")
+            
+            # Get changed files in this chart (excluding README, test.sh, .helmignore, .gitignore)
+            CHART_CHANGES=$(echo "$CHANGED_FILES" | grep "^charts/$chart/" | grep -v -E "(README\.md|test\.sh|\.helmignore|\.gitignore)$" || true)
+            
+            if [ -z "$CHART_CHANGES" ]; then
+              continue
+            fi
+            
+            echo "📦 Chart '$chart' has changes:"
+            echo "$CHART_CHANGES" | sed 's/^/  - /'
+            
+            # Check if Chart.yaml version changed
+            CHART_VERSION_CHANGED=$(echo "$CHANGED_FILES" | grep "^charts/$chart/Chart\.yaml$" || true)
+            
+            if [ -z "$CHART_VERSION_CHANGED" ]; then
+              echo "❌ ERROR: Chart '$chart' was modified but Chart.yaml version was not bumped!"
+              ERRORS=$((ERRORS + 1))
+            else
+              # Verify version actually changed (not just whitespace)
+              CURRENT_VERSION=$(yq -r '.version' "charts/$chart/Chart.yaml")
+              git checkout ${{ github.event.pull_request.base.sha }} -- "charts/$chart/Chart.yaml" 2>/dev/null || true
+              BASE_VERSION=$(yq -r '.version' "charts/$chart/Chart.yaml" 2>/dev/null || echo "0.0.0")
+              git checkout ${{ github.sha }} -- "charts/$chart/Chart.yaml"
+              
+              if [ "$CURRENT_VERSION" = "$BASE_VERSION" ]; then
+                echo "❌ ERROR: Chart.yaml was modified but version ($CURRENT_VERSION) did not change!"
+                ERRORS=$((ERRORS + 1))
+              else
+                echo "✅ Version bumped: $BASE_VERSION → $CURRENT_VERSION"
+              fi
+            fi
+            echo ""
+          done
+          
+          if [ $ERRORS -gt 0 ]; then
+            echo ""
+            echo "❌ $ERRORS chart(s) need version bumps"
+            echo ""
+            echo "📝 How to fix:"
+            echo "  1. Edit charts/<chart>/Chart.yaml"
+            echo "  2. Increment the 'version' field (CalVer: YYYY.MM.MICRO)"
+            echo "     - values.yaml, templates/, dependencies changed → bump MICRO"
+            echo "     - Example: 2026.01.0 → 2026.01.1"
+            echo ""
+            echo "  3. If library chart changed, bump it AND all game charts that depend on it"
+            echo ""
+            exit 1
+          fi
+          
+          echo "✅ All modified charts have version bumps"

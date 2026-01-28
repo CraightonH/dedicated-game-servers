@@ -72,8 +72,14 @@ jobs:
 
       - name: Checkout gh-pages branch
         run: |
+          # Move packaged charts out of the way temporarily
+          mv .cr-release-packages /tmp/
+          
           git fetch origin gh-pages:gh-pages || git checkout --orphan gh-pages
           git checkout gh-pages
+          
+          # Move packaged charts back
+          mv /tmp/.cr-release-packages .
 
       - name: Update Helm repository index
         run: |
