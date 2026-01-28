@@ -3,14 +3,12 @@ name: Helm Lint
 on:
   pull_request:
     paths:
-      - 'chart/**'
-      - 'games/**'
+      - 'charts/**'
   push:
     branches:
       - main
     paths:
-      - 'chart/**'
-      - 'games/**'
+      - 'charts/**'
 
 jobs:
   lint:
@@ -24,15 +22,21 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Lint Helm chart
+      - name: Lint game-server-library
         run: |
-          helm lint ./chart
+          helm lint ./charts/game-server-library
 
-      - name: Lint Factorio values
+      - name: Lint factorio chart
         run: |
-          helm lint ./chart --values ./games/factorio/values.yaml
+          cd charts/factorio
+          helm dependency build
+          cd ../..
+          helm lint ./charts/factorio
 
-      # Add more games as they're implemented
-      # - name: Lint Valheim values
+      # Add more game charts as they're implemented
+      # - name: Lint valheim chart
       #   run: |
-      #     helm lint ./chart --values ./games/valheim/values.yaml
+      #     cd charts/valheim
+      #     helm dependency build
+      #     cd ../..
+      #     helm lint ./charts/valheim
