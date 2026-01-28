@@ -72,7 +72,7 @@ See [values.yaml](values.yaml) for the full list of configuration options.
 | `service.ports[0].nodePort` | Game port (UDP) | `30197` |
 | `service.ports[1].nodePort` | RCON port (TCP) | `30015` |
 | `persistence.size` | Storage size | `50Gi` |
-| `persistence.storageClass` | Storage class | `nfs-client` |
+| `persistence.storageClass` | Storage class | `""` (cluster default) |
 | `gameConfig.server-settings.config.name` | Server name | `My Factorio Server` |
 | `gameConfig.server-settings.config.game_password` | Game password | `""` (no password) |
 | `gameConfig.server-settings.config.max_players` | Max players | `10` |
