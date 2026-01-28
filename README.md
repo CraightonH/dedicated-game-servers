@@ -41,7 +41,7 @@ helm install factorio dedicated-game-servers/factorio
 
 # With custom server name
 helm install factorio dedicated-game-servers/factorio \
-  --set gameConfig.files.server-settings\.json.name="My Factory"
+  --set gameConfig.server-settings.config.name="My Factory"
 
 # With custom values file
 helm install factorio dedicated-game-servers/factorio -f my-values.yaml
@@ -138,11 +138,21 @@ containerSecurityContext:
 
 # Game configuration files (optional)
 gameConfig:
-  enabled: true
-  mountPath: /game/config
-  files:
-    config.json: |
-      { "setting": "value" }
+  # Each key is a config group that becomes a file
+  server-config:
+    enabled: true
+    mountPath: /game/config
+    configFormat: json  # or yaml
+    config:
+      setting: "value"
+      another: 123
+  # Or use 'file' for direct control:
+  # admin-list:
+  #   enabled: true
+  #   mountPath: /game/config
+  #   file: |
+  #     admin1
+  #     admin2
 
 # Environment variables (optional)
 env:
