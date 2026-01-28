@@ -1,18 +1,1 @@
-{{- if .Values.gameConfig.serverSettings.enabled }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.name }}-config
-  labels:
-    {{- include "game-server.labels" . | nindent 4 }}
-data:
-  {{- if .Values.gameConfig.serverSettings.file }}
-  {{- /* Advanced mode: User provided direct file content */}}
-  serverSettings.json: |
-{{ .Values.gameConfig.serverSettings.file | indent 4 }}
-  {{- else if .Values.gameConfig.serverSettings.config }}
-  {{- /* User-friendly mode: Convert camelCase to snake_case and generate JSON */}}
-  serverSettings.json: |
-{{ include "factorio.camelToSnake" .Values.gameConfig.serverSettings.config | fromYaml | toJson | indent 4 }}
-  {{- end }}
-{{- end }}
+{{- include "game-server.configmap" . }}
