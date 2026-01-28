@@ -173,36 +173,69 @@ securityContext:
 
 ### 4. Create test.sh (Recommended)
 
-**Template:**
+**Critical**: Wait for game-specific startup messages, not just pod readiness!
+
+**How to find the success message:**
+1. Deploy the server: `helm install test ./charts/<game-name>`
+2. Watch logs: `kubectl logs -f -l app=<game-name>`
+3. Look for a message that indicates the server is accepting connections
+
+**Examples:**
+- Factorio: `Hosting game at IP ADDR`
+- Valheim: `Game server connected`
+- Minecraft: `Done (X.XXXs)! For help, type "help"`
+
+**Template (Factorio-style with explicit wait):**
 
 ```bash
 #!/bin/bash
 # <Game Name> deployment validation test
 set -e
 
-POD=$(kubectl get pod -l app=<game-name> -o jsonpath='{.items[0].metadata.name}')
-
 echo "🔍 Validating <game-name> server deployment..."
 
 # Wait for pod ready
+echo "⏳ Waiting for pod readiness..."
 kubectl wait --for=condition=ready pod -l app=<game-name> --timeout=300s
 
-# Check logs for game-specific success messages
-LOGS=$(kubectl logs $POD --tail=100)
-if echo "$LOGS" | grep -q "<SUCCESS_PATTERN>"; then
-    echo "✅ Server started successfully"
-else
-    echo "❌ Server did not start"
-    echo "$LOGS"
+POD=$(kubectl get pod -l app=<game-name> -o jsonpath='{.items[0].metadata.name}')
+echo "✅ Pod is ready: $POD"
+
+# Wait up to 30 seconds for game server to start
+echo "📋 Waiting for server startup (up to 30 seconds)..."
+SUCCESS=false
+for i in {1..30}; do
+    LOGS=$(kubectl logs $POD --tail=50 2>/dev/null || echo "")
+    
+    # Replace <SUCCESS_MESSAGE> with your game's specific message
+    if echo "$LOGS" | grep -q "<SUCCESS_MESSAGE>"; then
+        echo "✅ Found '<SUCCESS_MESSAGE>' in logs"
+        SUCCESS=true
+        break
+    fi
+    
+    # Exit if pod crashes
+    POD_PHASE=$(kubectl get pod $POD -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+    if [ "$POD_PHASE" != "Running" ]; then
+        echo "❌ Pod crashed (phase: $POD_PHASE)"
+        kubectl logs $POD --tail=100
+        exit 1
+    fi
+    
+    sleep 1
+done
+
+if [ "$SUCCESS" = false ]; then
+    echo "❌ Server did not start within 30 seconds"
+    kubectl logs $POD --tail=100
     exit 1
 fi
 
+echo "✅ Server started successfully"
+
 # Verify config files (if using gameConfig)
-if kubectl exec $POD -- test -f /path/to/config.json; then
+if kubectl exec $POD -- test -f /path/to/config.json 2>/dev/null; then
     echo "✅ Config file exists"
-else
-    echo "❌ Config file not found"
-    exit 1
 fi
 
 # Check PVC
@@ -210,7 +243,7 @@ PVC=$(kubectl get pvc <game-name>-data -o jsonpath='{.status.phase}')
 if [ "$PVC" == "Bound" ]; then
     echo "✅ PVC is bound"
 else
-    echo "❌ PVC is not bound: $PVC"
+    echo "❌ PVC not bound: $PVC"
     exit 1
 fi
 
@@ -219,12 +252,14 @@ SVC=$(kubectl get svc <game-name> -o jsonpath='{.spec.type}')
 if [ "$SVC" == "NodePort" ]; then
     echo "✅ Service is NodePort"
 else
-    echo "❌ Service type is not NodePort: $SVC"
+    echo "❌ Service type: $SVC"
     exit 1
 fi
 
 echo "✅ All validation checks passed!"
 ```
+
+**Reference**: See [charts/factorio/test.sh](charts/factorio/test.sh) for a complete working example.
 
 **Make it executable:**
 ```bash

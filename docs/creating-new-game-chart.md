@@ -372,7 +372,30 @@ See [Factorio README](../charts/factorio/README.md) as a template.
 
 ### Step 8: Create `test.sh`
 
-Automated validation script for CI:
+Automated validation script for CI that waits for explicit game server startup.
+
+**Critical**: Game servers often take time to initialize after pod readiness. Your test **must** wait for the game-specific startup message, not just pod readiness.
+
+#### Finding Your Game's Startup Message
+
+Before writing the test, deploy your server and find the exact message:
+
+```bash
+# Deploy the server
+helm install test ./charts/<game-name>
+
+# Watch the logs
+kubectl logs -f -l app=<game-name>
+```
+
+Look for a message that clearly indicates the server is accepting connections:
+- **Factorio**: `Hosting game at IP ADDR`
+- **Valheim**: `Game server connected`
+- **Minecraft**: `Done (X.XXXs)! For help, type "help"`
+- **7 Days to Die**: `GameServer.Init successful`
+- **Satisfactory**: `Server is ready`
+
+#### Test Script Template
 
 ```bash
 #!/bin/bash
@@ -381,58 +404,82 @@ set -e
 
 echo "🔍 Validating <game-name> server deployment..."
 
-# 1. Wait for pod to be ready
+# 1. Wait for pod readiness
 echo "⏳ Waiting for pod readiness..."
 kubectl wait --for=condition=ready pod -l app=<game-name> --timeout=300s
 
-# Get pod name
 POD=$(kubectl get pod -l app=<game-name> -o jsonpath='{.items[0].metadata.name}')
 echo "✅ Pod is ready: $POD"
 
-# 2. Check logs for success indicators
-echo "📋 Checking server logs..."
-LOGS=$(kubectl logs $POD --tail=100)
+# 2. Wait up to 30 seconds for game server to actually start
+# CRITICAL: Replace <SUCCESS_MESSAGE> with your game's specific message
+echo "📋 Waiting for <game-name> server to start (up to 30 seconds)..."
+SUCCESS=false
+for i in {1..30}; do
+    LOGS=$(kubectl logs $POD --tail=50 2>/dev/null || echo "")
+    
+    # Check for game-specific success message
+    if echo "$LOGS" | grep -q "<SUCCESS_MESSAGE>"; then
+        echo "✅ Found '<SUCCESS_MESSAGE>' in logs"
+        SUCCESS=true
+        break
+    fi
+    
+    # Exit early if pod crashes
+    POD_PHASE=$(kubectl get pod $POD -o jsonpath='{.status.phase}' 2>/dev/null || echo "Unknown")
+    if [ "$POD_PHASE" != "Running" ]; then
+        echo "❌ Pod is no longer running (phase: $POD_PHASE)"
+        echo "Recent logs:"
+        echo "$LOGS"
+        exit 1
+    fi
+    
+    sleep 1
+done
 
-# Look for game-specific success message
-# IMPORTANT: Research what log message indicates the server is ready
-if echo "$LOGS" | grep -qi "server is ready\|listening on\|started successfully"; then
-    echo "✅ Server started successfully"
-else
-    echo "❌ Server did not start properly"
+if [ "$SUCCESS" = false ]; then
+    echo "❌ Server did not start within 30 seconds"
     echo "Recent logs:"
-    echo "$LOGS"
+    kubectl logs $POD --tail=100
     exit 1
 fi
 
-# 3. Verify config file was mounted (if using gameConfig)
-if kubectl exec $POD -- test -f /game/config/server.json 2>/dev/null; then
+# 3. Verify pod is still running
+POD_PHASE=$(kubectl get pod $POD -o jsonpath='{.status.phase}')
+if [ "$POD_PHASE" != "Running" ]; then
+    echo "❌ Pod stopped after startup (phase: $POD_PHASE)"
+    exit 1
+fi
+
+echo "✅ Server started successfully and is still running"
+
+# 4. Verify config file (if using gameConfig)
+if kubectl exec $POD -- test -f /game/config/config.json 2>/dev/null; then
     echo "✅ Config file mounted correctly"
 else
     echo "⚠️  Config file not found (may be expected if gameConfig disabled)"
 fi
 
-# 4. Check PVC is bound
+# 5. Check PVC is bound
 PVC_NAME="<game-name>-data"
 PVC_STATUS=$(kubectl get pvc $PVC_NAME -o jsonpath='{.status.phase}' 2>/dev/null || echo "NotFound")
 if [ "$PVC_STATUS" == "Bound" ]; then
     echo "✅ PVC is bound: $PVC_NAME"
 else
     echo "❌ PVC not bound: $PVC_STATUS"
-    kubectl get pvc $PVC_NAME || true
     exit 1
 fi
 
-# 5. Verify service
+# 6. Verify service
 SVC_TYPE=$(kubectl get svc <game-name> -o jsonpath='{.spec.type}')
 if [ "$SVC_TYPE" == "NodePort" ]; then
     NODE_PORT=$(kubectl get svc <game-name> -o jsonpath='{.spec.ports[0].nodePort}')
     echo "✅ Service is NodePort on port $NODE_PORT"
 else
-    echo "❌ Unexpected service type: $SVC_TYPE"
-    exit 1
+    echo "⚠️  Service type is $SVC_TYPE (expected NodePort for tests)"
 fi
 
-# 6. Optional: Check container resources
+# 7. Check container resources
 REQUESTS_MEM=$(kubectl get pod $POD -o jsonpath='{.spec.containers[0].resources.requests.memory}')
 LIMITS_MEM=$(kubectl get pod $POD -o jsonpath='{.spec.containers[0].resources.limits.memory}')
 echo "ℹ️  Resources: requests=$REQUESTS_MEM, limits=$LIMITS_MEM"
@@ -440,11 +487,28 @@ echo "ℹ️  Resources: requests=$REQUESTS_MEM, limits=$LIMITS_MEM"
 echo "✅ All validation checks passed!"
 ```
 
-**Important notes**:
-- Replace `<game-name>` with your actual game name
-- Research the correct log message for "server ready"
-- Adjust file paths based on your `gameConfig.mountPath`
-- Make the script executable: `chmod +x test.sh`
+#### Real Example: Factorio
+
+See [charts/factorio/test.sh](../../charts/factorio/test.sh) for a complete working example:
+
+```bash
+# Wait for "Hosting game at IP ADDR" message
+if echo "$LOGS" | grep -q "Hosting game at IP ADDR"; then
+    SUCCESS=true
+    break
+fi
+```
+
+**Why this matters:**
+1. **Pod ready ≠ server ready**: Container may be running but game server still initializing
+2. **Timing**: Most game servers take 10-30 seconds to fully start
+3. **False positives**: Without explicit checks, tests pass but server isn't actually working
+4. **CI reliability**: Ensures deployments actually work, not just that pods start
+
+**Make it executable:**
+```bash
+chmod +x charts/<game-name>/test.sh
+```
 
 ### Step 9: Test Locally
 
