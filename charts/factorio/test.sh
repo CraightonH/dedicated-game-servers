@@ -56,10 +56,10 @@ fi
 
 echo "✅ Factorio server started successfully and is still running"
 
-# Verify config file was copied to writable location (if using gameConfig)
+# Verify config file was mounted (if using gameConfig)
 if kubectl exec $POD -- test -f /factorio/config/server-settings.json 2>/dev/null; then
-    echo "✅ Config file exists at /factorio/config/server-settings.json"
-    # Verify it contains expected content (basic check without jq dependency)
+    echo "✅ Config file mounted correctly"
+    # Verify it contains expected content (basic check without jq)
     CONFIG_CONTENT=$(kubectl exec $POD -- cat /factorio/config/server-settings.json 2>/dev/null)
     if echo "$CONFIG_CONTENT" | grep -q '"name"' && echo "$CONFIG_CONTENT" | grep -q '"max_players"'; then
         echo "✅ server-settings.json contains expected fields"

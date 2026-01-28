@@ -54,7 +54,7 @@ env:
 gameConfig:
   server-settings:
     enabled: true
-    mountPath: /factorio/config-readonly
+    mountPath: /factorio/config
     configFormat: json
     # Server settings (generates server-settings.json)
     # Override individual settings as needed
@@ -107,10 +107,10 @@ containerSecurityContext:
   runAsNonRoot: true
   allowPrivilegeEscalation: false
 
-# Init container to fix volume permissions and copy config
+# Init container to fix volume permissions
 # Required for some storage classes that don't respect fsGroup
 initContainers:
-  - name: setup
+  - name: fix-permissions
     image: busybox:latest
     command: ['sh', '-c']
     args:
@@ -118,23 +118,18 @@ initContainers:
         echo "Fixing permissions on /factorio..."
         chown -R 1000:1000 /factorio
         chmod -R 755 /factorio
-        echo "Permissions fixed"
         
-        echo "Copying config files to writable location..."
+        echo "Creating config directory with correct permissions..."
         mkdir -p /factorio/config
-        if [ -f /factorio/config-readonly/server-settings.json ]; then
-          cp /factorio/config-readonly/server-settings.json /factorio/config/server-settings.json
-          chown 1000:1000 /factorio/config/server-settings.json
-          echo "Copied server-settings.json"
-        fi
-        echo "Setup complete"
+        chown 1000:1000 /factorio/config
+        chmod 775 /factorio/config
+        
+        echo "Permissions fixed"
     securityContext:
       runAsUser: 0  # Must run as root to chown
     volumeMounts:
       - name: data
         mountPath: /factorio
-      - name: game-config
-        mountPath: /factorio/config-readonly
 
 # Optional: Pin to specific node (e.g., node with more RAM)
 nodeSelector: {}
