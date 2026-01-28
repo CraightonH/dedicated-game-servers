@@ -2,7 +2,7 @@ apiVersion: v2
 name: factorio
 description: Factorio dedicated server on Kubernetes
 type: application
-version: 2026.01.2
+version: 2026.01.3
 appVersion: "2.0"
 
 keywords:

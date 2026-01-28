@@ -23,7 +23,7 @@ resources:
 # Persistent storage for saves and mods
 persistence:
   enabled: true
-  storageClass: nfs-client  # Change to your storage class
+  storageClass: ""  # Use cluster's default storage class (or override with --set)
   size: 50Gi
   mountPath: /factorio
 
