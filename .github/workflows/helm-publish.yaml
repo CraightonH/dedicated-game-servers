@@ -1,4 +1,4 @@
-name: Publish Helm Chart
+name: Publish Helm Charts
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'chart/**'
+      - 'charts/**'
 
 permissions:
   contents: write
@@ -31,10 +32,50 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Package Helm chart
+      - name: Package Helm charts
         run: |
           mkdir -p .cr-release-packages
-          helm package chart -d .cr-release-packages
+          
+          # Package old chart (backwards compatibility during migration)
+          if [ -d "chart" ]; then
+            echo "📦 Packaging legacy chart..."
+            helm package chart -d .cr-release-packages
+          fi
+          
+          # Package library chart (must be packaged first for dependencies)
+          if [ -d "charts/game-server-library" ]; then
+            echo "📦 Packaging game-server-library..."
+            helm package charts/game-server-library -d .cr-release-packages
+          fi
+          
+          # Package game charts (with dependencies)
+          for game_chart in charts/*/; do
+            chart_name=$(basename "$game_chart")
+            
+            # Skip library chart (already packaged) and non-chart directories
+            if [ "$chart_name" = "game-server-library" ]; then
+              continue
+            fi
+            
+            if [ -f "$game_chart/Chart.yaml" ]; then
+              echo "📦 Packaging $chart_name chart..."
+              
+              # Build dependencies if Chart.yaml has dependencies
+              if grep -q "^dependencies:" "$game_chart/Chart.yaml"; then
+                echo "  → Building dependencies for $chart_name..."
+                cd "$game_chart"
+                helm dependency build
+                cd ../..
+              fi
+              
+              # Package the chart
+              helm package "$game_chart" -d .cr-release-packages
+            fi
+          done
+          
+          echo ""
+          echo "✅ Packaged charts:"
+          ls -lh .cr-release-packages/
 
       - name: Checkout gh-pages branch
         run: |
@@ -43,15 +84,19 @@ jobs:
 
       - name: Update Helm repository index
         run: |
-          # Copy packaged chart to gh-pages branch
+          # Copy packaged charts to gh-pages branch
           cp .cr-release-packages/*.tgz .
           
           # Generate/update index
           helm repo index . --url https://craightonh.github.io/dedicated-game-servers/
           
+          # Show what's in the index
+          echo "📋 Charts in repository:"
+          helm search repo . --versions 2>/dev/null || cat index.yaml | grep -A2 "name:"
+          
           # Commit and push
           git add *.tgz index.yaml
-          git commit -m "Publish Helm chart from ${GITHUB_SHA::7}" || echo "No changes to commit"
+          git commit -m "Publish Helm charts from ${GITHUB_SHA::7}" || echo "No changes to commit"
           git push origin gh-pages
 
       - name: Deploy to GitHub Pages
@@ -61,3 +106,22 @@ jobs:
           publish_dir: .
           publish_branch: gh-pages
           keep_files: true
+      
+      - name: Summary
+        run: |
+          echo "## 📦 Published Charts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Charts published to: https://craightonh.github.io/dedicated-game-servers/" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Add Repository" >> $GITHUB_STEP_SUMMARY
+          echo '```bash' >> $GITHUB_STEP_SUMMARY
+          echo "helm repo add dedicated-game-servers https://craightonh.github.io/dedicated-game-servers/" >> $GITHUB_STEP_SUMMARY
+          echo "helm repo update" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Available Charts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          for chart in .cr-release-packages/*.tgz; do
+            chart_name=$(basename "$chart" .tgz)
+            echo "- \`$chart_name\`" >> $GITHUB_STEP_SUMMARY
+          done
