@@ -52,47 +52,46 @@ env:
 # Factorio server settings (camelCase for Helm, converted to snake_case for server-settings.json)
 # Documentation: https://wiki.factorio.com/Multiplayer#Setting_up_a_multiplayer_game
 gameConfig:
-  enabled: true
-  mountPath: /factorio/config
-  
-  # User-friendly server settings (generates server-settings.json)
-  # Override individual settings as needed
   serverSettings:
-    name: "My Factorio Server"
-    description: "A Factorio server running on Kubernetes"
-    tags:
-      - game
-      - tags
-    maxPlayers: 10
-    visibility:
-      public: false
-      lan: true
-    username: ""  # Factorio.com username for public server listing
-    password: ""  # Factorio.com password for public server listing
-    token: ""     # Factorio.com auth token
-    gamePassword: ""  # Password players need to join
-    requireUserVerification: false
-    maxUploadInKilobytesPerSecond: 0
-    maxUploadSlots: 5
-    minimumLatencyInTicks: 0
-    ignorePlayerLimitForReturningPlayers: false
-    allowCommands: "admins-only"  # "true", "false", or "admins-only"
-    autosaveInterval: 10  # Minutes between autosaves
-    autosaveSlots: 5      # Number of autosave slots
-    afkAutokickInterval: 0  # Minutes before AFK kick (0 = disabled)
-    autoPause: true
-    onlyAdminsCanPauseTheGame: true
-    autosaveOnlyOnServer: true
-    nonBlockingSaving: false
-    minimumSegmentSize: 25
-    minimumSegmentSizePeerCount: 20
-    maximumSegmentSize: 100
-    maximumSegmentSizePeerCount: 10
-  
-  # Advanced: Direct file control (overrides serverSettings)
-  # Use this if you need complete control over server-settings.json
-  files: {}
-    # server-settings.json: |
+    enabled: true
+    mountPath: /factorio/config
+    configFormat: json
+    # User-friendly server settings (generates server-settings.json)
+    # Override individual settings as needed
+    config:
+      name: "My Factorio Server"
+      description: "A Factorio server running on Kubernetes"
+      tags:
+        - game
+        - tags
+      maxPlayers: 10
+      visibility:
+        public: false
+        lan: true
+      username: ""  # Factorio.com username for public server listing
+      password: ""  # Factorio.com password for public server listing
+      token: ""     # Factorio.com auth token
+      gamePassword: ""  # Password players need to join
+      requireUserVerification: false
+      maxUploadInKilobytesPerSecond: 0
+      maxUploadSlots: 5
+      minimumLatencyInTicks: 0
+      ignorePlayerLimitForReturningPlayers: false
+      allowCommands: "admins-only"  # "true", "false", or "admins-only"
+      autosaveInterval: 10  # Minutes between autosaves
+      autosaveSlots: 5      # Number of autosave slots
+      afkAutokickInterval: 0  # Minutes before AFK kick (0 = disabled)
+      autoPause: true
+      onlyAdminsCanPauseTheGame: true
+      autosaveOnlyOnServer: true
+      nonBlockingSaving: false
+      minimumSegmentSize: 25
+      minimumSegmentSizePeerCount: 20
+      maximumSegmentSize: 100
+      maximumSegmentSizePeerCount: 10
+    # Advanced: Direct file control (overrides config)
+    # Use this if you need complete control over server-settings.json
+    # file: |
     #   {
     #     "name": "Custom Server",
     #     ...

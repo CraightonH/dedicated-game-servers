@@ -2,7 +2,7 @@ apiVersion: v2
 name: factorio
 description: Factorio dedicated server on Kubernetes
 type: application
-version: 2026.01.1
+version: 2026.01.2
 appVersion: "2.0"
 
 keywords:
@@ -23,7 +23,7 @@ maintainers:
 
 dependencies:
   - name: game-server-library
-    version: "2026.01.0"
+    version: "2026.01.1"
     repository: "file://../game-server-library"
 
 # Trigger publish workflow with fixed gh-pages handling
