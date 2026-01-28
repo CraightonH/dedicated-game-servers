@@ -35,7 +35,7 @@ helm install factorio dedicated-game-servers/factorio
 
 ```bash
 helm install factorio dedicated-game-servers/factorio \
-  --set gameConfig.files.server-settings\.json.name="My Awesome Factory"
+  --set gameConfig.serverSettings.name="My Awesome Factory"
 ```
 
 ### With Custom Values File
@@ -73,15 +73,43 @@ See [values.yaml](values.yaml) for the full list of configuration options.
 | `service.ports[1].nodePort` | RCON port (TCP) | `30015` |
 | `persistence.size` | Storage size | `50Gi` |
 | `persistence.storageClass` | Storage class | `nfs-client` |
-| `gameConfig.files.server-settings.json.name` | Server name | `My Factorio Server` |
-| `gameConfig.files.server-settings.json.game_password` | Game password | `""` (no password) |
-| `gameConfig.files.server-settings.json.max_players` | Max players | `10` |
+| `gameConfig.serverSettings.name` | Server name | `My Factorio Server` |
+| `gameConfig.serverSettings.game_password` | Game password | `""` (no password) |
+| `gameConfig.serverSettings.max_players` | Max players | `10` |
 
 ### Server Settings
 
-All Factorio server settings can be configured via `gameConfig.files.server-settings.json`. See the [Factorio wiki](https://wiki.factorio.com/Multiplayer#Setting_up_a_multiplayer_game) for all available options.
+Configure Factorio server settings via `gameConfig.serverSettings`. See the [Factorio wiki](https://wiki.factorio.com/Multiplayer#Setting_up_a_multiplayer_game) for all available options.
 
-Example customization:
+#### User-Friendly Configuration (Recommended)
+
+Set individual server settings as YAML values:
+
+```yaml
+gameConfig:
+  serverSettings:
+    name: "Epic Factory"
+    description: "Build the factory!"
+    max_players: 20
+    game_password: "secret123"
+    visibility:
+      public: false
+      lan: true
+    auto_pause: true
+    autosave_interval: 5
+```
+
+This approach makes it easy to override single settings via `--set`:
+
+```bash
+helm install factorio dedicated-game-servers/factorio \
+  --set gameConfig.serverSettings.name="My Server" \
+  --set gameConfig.serverSettings.max_players=20
+```
+
+#### Advanced: Direct File Control
+
+For complete control over `server-settings.json`, use `gameConfig.files` (overrides `serverSettings`):
 
 ```yaml
 gameConfig:
@@ -100,6 +128,46 @@ gameConfig:
         "autosave_interval": 5
       }
 ```
+
+#### Common Server Setting Examples
+
+**Password-protected server**:
+```bash
+helm install factorio dedicated-game-servers/factorio \
+  --set gameConfig.serverSettings.game_password="mysecretpass"
+```
+
+**Public server listing on factorio.com**:
+```yaml
+gameConfig:
+  serverSettings:
+    name: "Public Megabase"
+    visibility:
+      public: true
+      lan: true
+    username: "your-factorio-username"
+    password: "your-factorio-password"
+    require_user_verification: true
+```
+
+**Large server (20+ players)**:
+```yaml
+gameConfig:
+  serverSettings:
+    max_players: 50
+    autosave_interval: 5  # More frequent saves
+resources:
+  requests:
+    memory: 4Gi
+    cpu: 2000m
+  limits:
+    memory: 8Gi
+    cpu: 4000m
+```
+
+**Available Server Settings**:
+
+See [values.yaml](values.yaml) for all available `gameConfig.serverSettings` options with defaults, or refer to the [Factorio wiki](https://wiki.factorio.com/Multiplayer#Setting_up_a_multiplayer_game) for detailed documentation.
 
 ### Environment Variables
 

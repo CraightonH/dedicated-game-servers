@@ -1,1 +1,25 @@
-{{ include "game-server.configmap" . }}
+{{- if .Values.gameConfig.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-config
+  labels:
+    {{- include "game-server.labels" . | nindent 4 }}
+data:
+  {{- if hasKey .Values.gameConfig.files "server-settings.json" }}
+  {{- /* Advanced mode: User provided direct file content */}}
+  server-settings.json: |
+{{ .Values.gameConfig.files."server-settings.json" | indent 4 }}
+  {{- else if .Values.gameConfig.serverSettings }}
+  {{- /* User-friendly mode: Generate from serverSettings dict */}}
+  server-settings.json: |
+{{ .Values.gameConfig.serverSettings | toJson | indent 4 }}
+  {{- end }}
+  {{- /* Include any other files from gameConfig.files */}}
+  {{- range $filename, $content := .Values.gameConfig.files }}
+  {{- if ne $filename "server-settings.json" }}
+  {{ $filename }}: |
+{{ $content | indent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}
