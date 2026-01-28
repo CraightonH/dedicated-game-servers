@@ -108,6 +108,24 @@ containerSecurityContext:
   runAsNonRoot: true
   allowPrivilegeEscalation: false
 
+# Init container to fix volume permissions
+# Required for some storage classes that don't respect fsGroup
+initContainers:
+  - name: fix-permissions
+    image: busybox:latest
+    command: ['sh', '-c']
+    args:
+      - |
+        echo "Fixing permissions on /factorio..."
+        chown -R 1000:1000 /factorio
+        chmod -R 755 /factorio
+        echo "Permissions fixed"
+    securityContext:
+      runAsUser: 0  # Must run as root to chown
+    volumeMounts:
+      - name: data
+        mountPath: /factorio
+
 # Optional: Pin to specific node (e.g., node with more RAM)
 nodeSelector: {}
   # kubernetes.io/hostname: node1
