@@ -135,7 +135,6 @@ jobs:
           
           # Install with CI-optimized settings
           helm install ${{ matrix.game }}-test ./charts/${{ matrix.game }} \
-            --set persistence.storageClass="local-path" \
             --set persistence.size="1Gi" \
             --set resources.requests.memory="512Mi" \
             --set resources.limits.memory="1Gi" \
