@@ -22,7 +22,7 @@ spec:
         {{- include "game-server.selectorLabels" . | nindent 8 }}
       {{- if .Values.gameConfig.enabled }}
       annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap-game-config.yaml") . | sha256sum }}
+        checksum/config: {{ include "game-server.configmap" . | sha256sum }}
       {{- end }}
     spec:
       {{- if .Values.nodeSelector }}
