@@ -115,16 +115,11 @@ initContainers:
     command: ['sh', '-c']
     args:
       - |
-        echo "Fixing permissions on /factorio..."
-        chown -R 1000:1000 /factorio
-        chmod -R 755 /factorio
-        
-        echo "Creating config directory with correct permissions..."
+        echo "Setting up /factorio directories and permissions..."
         mkdir -p /factorio/config
-        chown 1000:1000 /factorio/config
-        chmod 775 /factorio/config
-        
-        echo "Permissions fixed"
+        chown -R 1000:1000 /factorio
+        chmod -R 775 /factorio
+        echo "Setup complete"
     securityContext:
       runAsUser: 0  # Must run as root to chown
     volumeMounts:
