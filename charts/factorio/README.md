@@ -2,6 +2,8 @@
 
 Deploy a Factorio dedicated server on Kubernetes with a single command.
 
+**Versioning**: This chart uses [Calendar Versioning (CalVer)](../../docs/VERSIONING.md) with the format `YYYY.MM.MICRO`.
+
 ## TL;DR
 
 ```bash

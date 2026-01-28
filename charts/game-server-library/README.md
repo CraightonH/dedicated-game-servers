@@ -2,6 +2,8 @@
 
 A Helm library chart providing common templates for game server deployments.
 
+**Versioning**: This chart uses [Calendar Versioning (CalVer)](../../docs/VERSIONING.md) with the format `YYYY.MM.MICRO`.
+
 ## What is a Library Chart?
 
 A library chart is a type of Helm chart that defines chart primitives or definitions which can be shared by other charts but does not create any resource instances itself. Library charts do not contain a `templates/` directory with Kubernetes resource manifests, but instead contain named templates that can be included by other charts.
