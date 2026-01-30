@@ -1,0 +1,81 @@
+# Valheim Dedicated Server Configuration
+
+# Server identity
+name: valheim
+
+# Valheim Docker image
+# Using lloesche/valheim-server which includes BepInEx and ValheimPlus support
+# See: https://github.com/lloesche/valheim-server-docker
+image:
+  repository: lloesche/valheim-server
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Resource allocation
+resources:
+  requests:
+    memory: 3Gi
+    cpu: 1000m
+  limits:
+    memory: 6Gi
+    cpu: 2000m
+
+# Persistent storage for world saves and config
+persistence:
+  enabled: true
+  storageClass: ""  # Use cluster's default storage class (or override with --set)
+  size: 20Gi
+  mountPath: /config
+
+# Network configuration (NodePort for home cluster access)
+service:
+  type: NodePort
+  ports:
+    - name: game
+      port: 2456
+      nodePort: 30456  # Change if port is already in use
+      protocol: UDP
+    - name: query
+      port: 2457
+      nodePort: 30457  # Change if port is already in use
+      protocol: UDP
+
+# Environment variables for Valheim server
+# Documentation: https://github.com/lloesche/valheim-server-docker#environment-variables
+# Using map format for easy configuration
+env:
+  SERVER_NAME: "My Valheim Server"
+  WORLD_NAME: "Dedicated"
+  SERVER_PASS: "secret"  # Must be at least 5 characters!
+  SERVER_PUBLIC: "false"
+  UPDATE_CRON: "*/15 * * * *"  # Check for updates every 15 minutes
+  UPDATE_IF_IDLE: "true"  # Only update when no players connected
+  RESTART_CRON: "0 5 * * *"  # Daily restart at 5 AM
+  RESTART_IF_IDLE: "true"  # Only restart when no players connected
+  BACKUPS: "true"
+  BACKUPS_CRON: "0 * * * *"  # Hourly backups
+  BACKUPS_DIRECTORY: "/config/backups"
+  BACKUPS_MAX_AGE: "3"  # Keep 3 days of backups
+  TZ: "America/Denver"
+
+# Pod-level security context
+podSecurityContext:
+  fsGroup: 1000  # Valheim server runs as UID 1000
+
+# Container-level security context
+# Note: lloesche/valheim-server image handles its own permission setup
+# Running as root initially, then drops to UID 1000
+containerSecurityContext:
+  capabilities:
+    add:
+      - SYS_NICE  # Allows Steam library to optimize CPU scheduling
+
+# Optional: Pin to specific node (e.g., node with more RAM)
+nodeSelector: {}
+  # kubernetes.io/hostname: node1
+
+# Optional: Tolerations
+tolerations: []
+
+# Stop timeout for graceful shutdown (Valheim needs time to save)
+terminationGracePeriodSeconds: 120
