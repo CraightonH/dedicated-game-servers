@@ -2,8 +2,8 @@ apiVersion: v2
 name: game-server-library
 description: A library chart for common game server resources
 type: library
-version: 2026.01.1
-appVersion: "2026.01.1"
+version: 2026.01.2
+appVersion: "2026.01.2"
 
 keywords:
   - games

@@ -119,6 +119,55 @@ gameConfig:
   # Generates: server-settings.json mounted at /game/config/server-settings.json
 ```
 
+### `game-server.env`
+Processes environment variables for the container.
+
+**Features:**
+- Supports both map format (human-friendly) and list format (Kubernetes native)
+- Automatic conversion of map to Kubernetes list format
+- Support for `value` and `valueFrom` (secrets, configMaps)
+- Type conversion for numbers and booleans
+
+**Map Format (Recommended):**
+```yaml
+env:
+  SERVER_NAME: "My Server"
+  MAX_PLAYERS: 10
+  ENABLE_PVP: true
+```
+
+To override values:
+```bash
+--set env.SERVER_NAME="New Name"
+--set env.MAX_PLAYERS=20
+```
+
+**List Format (Also Supported):**
+```yaml
+env:
+  - name: SERVER_NAME
+    value: "My Server"
+  - name: MAX_PLAYERS
+    value: "10"
+```
+
+To override values (requires knowing array index):
+```bash
+--set env[0].value="New Name"
+--set env[1].value="20"
+```
+
+**Advanced Usage with valueFrom:**
+```yaml
+env:
+  SERVER_NAME: "My Server"
+  ADMIN_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: game-secrets
+        key: password
+```
+
 ## Helper Functions
 
 The library also provides common helper functions:
@@ -154,6 +203,25 @@ persistence:
   storageClass: nfs-client
   size: 50Gi
   mountPath: /data
+
+# Environment variables (map format - human friendly)
+env:
+  SERVER_NAME: "My Server"
+  MAX_PLAYERS: "10"
+  SERVER_PORT: 25565
+  # Advanced: Use valueFrom for secrets
+  ADMIN_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: game-secrets
+        key: admin-password
+
+# Also supports list format (Kubernetes native)
+# env:
+#   - name: SERVER_NAME
+#     value: "My Server"
+#   - name: MAX_PLAYERS
+#     value: "10"
 
 gameConfig:
   # Each key represents a config group (e.g., serverSettings, adminList)

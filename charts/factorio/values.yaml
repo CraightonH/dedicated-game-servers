@@ -41,13 +41,11 @@ service:
       protocol: TCP
 
 # Environment variables
+# Using map format for easy configuration
 env:
-  - name: UPDATE_MODS_ON_START
-    value: "false"  # Set to "true" to auto-update mods
-  - name: SAVE_NAME
-    value: "save1"  # Name of the save file
-  - name: GENERATE_NEW_SAVE
-    value: "false"  # Set to "true" to create new world on first start
+  UPDATE_MODS_ON_START: "false"  # Set to "true" to auto-update mods
+  SAVE_NAME: "save1"  # Name of the save file
+  GENERATE_NEW_SAVE: "false"  # Set to "true" to create new world on first start
 
 # Factorio server settings
 # Documentation: https://wiki.factorio.com/Multiplayer#Setting_up_a_multiplayer_game
