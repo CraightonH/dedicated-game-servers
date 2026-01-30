@@ -49,6 +49,12 @@ jobs:
             echo "📦 Chart '$chart' has changes:"
             echo "$CHART_CHANGES" | sed 's/^/  - /'
             
+            # Check if this is a new chart (doesn't exist in base branch)
+            if ! git cat-file -e ${{ github.event.pull_request.base.sha }}:charts/$chart/Chart.yaml 2>/dev/null; then
+              echo "✅ New chart '$chart' - skipping version check"
+              continue
+            fi
+            
             # Check if Chart.yaml version changed
             CHART_VERSION_CHANGED=$(echo "$CHANGED_FILES" | grep "^charts/$chart/Chart\.yaml$" || true)
             
@@ -57,10 +63,11 @@ jobs:
               ERRORS=$((ERRORS + 1))
             else
               # Verify version actually changed (not just whitespace)
+              # Get current version from PR
               CURRENT_VERSION=$(yq -r '.version' "charts/$chart/Chart.yaml")
-              git checkout ${{ github.event.pull_request.base.sha }} -- "charts/$chart/Chart.yaml" 2>/dev/null || true
-              BASE_VERSION=$(yq -r '.version' "charts/$chart/Chart.yaml" 2>/dev/null || echo "0.0.0")
-              git checkout ${{ github.sha }} -- "charts/$chart/Chart.yaml"
+              
+              # Get base version from main branch (without checking out files)
+              BASE_VERSION=$(git show ${{ github.event.pull_request.base.sha }}:charts/$chart/Chart.yaml | yq -r '.version')
               
               if [ "$CURRENT_VERSION" = "$BASE_VERSION" ]; then
                 echo "❌ ERROR: Chart.yaml was modified but version ($CURRENT_VERSION) did not change!"
