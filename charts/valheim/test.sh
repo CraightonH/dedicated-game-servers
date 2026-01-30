@@ -21,17 +21,19 @@ for i in {1..900}; do
     # Get recent logs
     LOGS=$(kubectl logs $POD --tail=100 2>/dev/null || echo "")
     
-    # Check for "Game server connected" message
-    # This is the definitive message that indicates the server is ready
-    if echo "$LOGS" | grep -q "Game server connected"; then
-        echo "✅ Found 'Game server connected' in logs"
+    # Check for "Running Valheim Server" message
+    # This indicates the server has started successfully
+    if echo "$LOGS" | grep -q "Running Valheim Server"; then
+        echo "✅ Found 'Running Valheim Server' in logs"
         SUCCESS=true
         break
     fi
     
-    # Alternative success indicators (any of these is good)
+    # Show progress indicators during startup
     if echo "$LOGS" | grep -q "DungeonDB Start"; then
-        echo "✅ Found 'DungeonDB Start' in logs (server initializing)"
+        if [ $((i % 120)) -eq 0 ]; then
+            echo "   Server initializing (DungeonDB started)..."
+        fi
     fi
     
     # Check if pod is still running
