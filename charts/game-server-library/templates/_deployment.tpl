@@ -51,7 +51,7 @@ spec:
         {{- end }}
         {{- if .Values.env }}
         env:
-          {{- toYaml .Values.env | nindent 10 }}
+          {{- include "game-server.env" . | nindent 10 }}
         {{- end }}
         ports:
         {{- range .Values.service.ports }}
