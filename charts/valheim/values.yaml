@@ -42,33 +42,21 @@ service:
 
 # Environment variables for Valheim server
 # Documentation: https://github.com/lloesche/valheim-server-docker#environment-variables
+# Using map format for easy configuration
 env:
-  - name: SERVER_NAME
-    value: "My Valheim Server"
-  - name: WORLD_NAME
-    value: "Dedicated"
-  - name: SERVER_PASS
-    value: "secret"  # Must be at least 5 characters!
-  - name: SERVER_PUBLIC
-    value: "false"
-  - name: UPDATE_CRON
-    value: "*/15 * * * *"  # Check for updates every 15 minutes
-  - name: UPDATE_IF_IDLE
-    value: "true"  # Only update when no players connected
-  - name: RESTART_CRON
-    value: "0 5 * * *"  # Daily restart at 5 AM
-  - name: RESTART_IF_IDLE
-    value: "true"  # Only restart when no players connected
-  - name: BACKUPS
-    value: "true"
-  - name: BACKUPS_CRON
-    value: "0 * * * *"  # Hourly backups
-  - name: BACKUPS_DIRECTORY
-    value: "/config/backups"
-  - name: BACKUPS_MAX_AGE
-    value: "3"  # Keep 3 days of backups
-  - name: TZ
-    value: "America/Denver"
+  SERVER_NAME: "My Valheim Server"
+  WORLD_NAME: "Dedicated"
+  SERVER_PASS: "secret"  # Must be at least 5 characters!
+  SERVER_PUBLIC: "false"
+  UPDATE_CRON: "*/15 * * * *"  # Check for updates every 15 minutes
+  UPDATE_IF_IDLE: "true"  # Only update when no players connected
+  RESTART_CRON: "0 5 * * *"  # Daily restart at 5 AM
+  RESTART_IF_IDLE: "true"  # Only restart when no players connected
+  BACKUPS: "true"
+  BACKUPS_CRON: "0 * * * *"  # Hourly backups
+  BACKUPS_DIRECTORY: "/config/backups"
+  BACKUPS_MAX_AGE: "3"  # Keep 3 days of backups
+  TZ: "America/Denver"
 
 # Pod-level security context
 podSecurityContext:

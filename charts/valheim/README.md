@@ -9,7 +9,7 @@ Deploy a Valheim dedicated server on Kubernetes with a single command.
 ```bash
 helm repo add dedicated-game-servers https://craightonh.github.io/dedicated-game-servers/
 helm install valheim dedicated-game-servers/valheim \
-  --set env[2].value="YourPassword123"
+  --set env.SERVER_PASS="YourPassword123"
 ```
 
 That's it! You now have a running Valheim server.
@@ -31,7 +31,7 @@ This chart deploys a Valheim dedicated server on Kubernetes using the [game-serv
 
 ```bash
 helm install valheim dedicated-game-servers/valheim \
-  --set env[2].value="MySecurePass123"
+  --set env.SERVER_PASS="MySecurePass123"
 ```
 
 ⚠️ **Important**: The server password must be at least 5 characters long!
@@ -40,9 +40,9 @@ helm install valheim dedicated-game-servers/valheim \
 
 ```bash
 helm install valheim dedicated-game-servers/valheim \
-  --set env[0].value="Vikings United" \
-  --set env[1].value="Midgard" \
-  --set env[2].value="SecurePassword"
+  --set env.SERVER_NAME="Vikings United" \
+  --set env.WORLD_NAME="Midgard" \
+  --set env.SERVER_PASS="SecurePassword"
 ```
 
 ### With Custom Values File
@@ -51,14 +51,10 @@ Create a `my-values.yaml`:
 
 ```yaml
 env:
-  - name: SERVER_NAME
-    value: "My Valheim Server"
-  - name: WORLD_NAME
-    value: "MyWorld"
-  - name: SERVER_PASS
-    value: "VerySecurePassword123"
-  - name: SERVER_PUBLIC
-    value: "false"
+  SERVER_NAME: "My Valheim Server"
+  WORLD_NAME: "MyWorld"
+  SERVER_PASS: "VerySecurePassword123"
+  SERVER_PUBLIC: "false"
 ```
 
 Install:
@@ -107,19 +103,19 @@ The Valheim server is configured through environment variables. See the [lloesch
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `env[0].value` (SERVER_NAME) | Server name shown in browser | `My Valheim Server` |
-| `env[1].value` (WORLD_NAME) | World name (without extension) | `Dedicated` |
-| `env[2].value` (SERVER_PASS) | Server password (min 5 chars!) | `secret` |
-| `env[3].value` (SERVER_PUBLIC) | List in server browser | `false` |
-| `env[4].value` (UPDATE_CRON) | Update check schedule | `*/15 * * * *` |
-| `env[5].value` (UPDATE_IF_IDLE) | Only update when idle | `true` |
-| `env[6].value` (RESTART_CRON) | Daily restart schedule | `0 5 * * *` |
-| `env[7].value` (RESTART_IF_IDLE) | Only restart when idle | `true` |
-| `env[8].value` (BACKUPS) | Enable automatic backups | `true` |
-| `env[9].value` (BACKUPS_CRON) | Backup schedule | `0 * * * *` |
-| `env[10].value` (BACKUPS_DIRECTORY) | Backup directory path | `/config/backups` |
-| `env[11].value` (BACKUPS_MAX_AGE) | Days to keep backups | `3` |
-| `env[12].value` (TZ) | Server timezone | `America/Denver` |
+| `env.SERVER_NAME` | Server name shown in browser | `My Valheim Server` |
+| `env.WORLD_NAME` | World name (without extension) | `Dedicated` |
+| `env.SERVER_PASS` | Server password (min 5 chars!) | `secret` |
+| `env.SERVER_PUBLIC` | List in server browser | `false` |
+| `env.UPDATE_CRON` | Update check schedule | `*/15 * * * *` |
+| `env.UPDATE_IF_IDLE` | Only update when idle | `true` |
+| `env.RESTART_CRON` | Daily restart schedule | `0 5 * * *` |
+| `env.RESTART_IF_IDLE` | Only restart when idle | `true` |
+| `env.BACKUPS` | Enable automatic backups | `true` |
+| `env.BACKUPS_CRON` | Backup schedule | `0 * * * *` |
+| `env.BACKUPS_DIRECTORY` | Backup directory path | `/config/backups` |
+| `env.BACKUPS_MAX_AGE` | Days to keep backups | `3` |
+| `env.TZ` | Server timezone | `America/Denver` |
 
 ## Connecting to Your Server
 
@@ -225,7 +221,7 @@ If you have an existing Valheim world from a local game:
 3. **Update WORLD_NAME**:
    ```bash
    helm upgrade valheim dedicated-game-servers/valheim \
-     --set env[1].value="MyWorld"
+     --set env.WORLD_NAME="MyWorld"
    ```
 
 ## Troubleshooting
@@ -253,7 +249,7 @@ If you have an existing Valheim world from a local game:
 2. **Wrong password**: Must be at least 5 characters
    ```bash
    helm upgrade valheim dedicated-game-servers/valheim \
-     --set env[2].value="NewPassword123"
+     --set env.SERVER_PASS="NewPassword123"
    ```
 
 3. **Firewall/NodePort**: Check ports are accessible
@@ -319,8 +315,7 @@ Enable BepInEx mod support:
 
 ```yaml
 env:
-  - name: BEPINEX
-    value: "true"
+  BEPINEX: "true"
 ```
 
 Place mods in `/config/bepinex/plugins/`:
@@ -337,8 +332,7 @@ Enable ValheimPlus:
 
 ```yaml
 env:
-  - name: VALHEIM_PLUS
-    value: "true"
+  VALHEIM_PLUS: "true"
 ```
 
 Configure ValheimPlus settings:
@@ -355,8 +349,7 @@ Set admin SteamIDs:
 
 ```yaml
 env:
-  - name: ADMINLIST_IDS
-    value: "76561198012345678 76561198087654321"
+  ADMINLIST_IDS: "76561198012345678 76561198087654321"
 ```
 
 ### Ban Users
@@ -365,8 +358,7 @@ Set banned SteamIDs:
 
 ```yaml
 env:
-  - name: BANNEDLIST_IDS
-    value: "76561198012345678"
+  BANNEDLIST_IDS: "76561198012345678"
 ```
 
 ### Whitelist (Permitted Users)
@@ -375,8 +367,7 @@ Allow only specific SteamIDs:
 
 ```yaml
 env:
-  - name: PERMITTEDLIST_IDS
-    value: "76561198012345678 76561198087654321"
+  PERMITTEDLIST_IDS: "76561198012345678 76561198087654321"
 ```
 
 ### Custom Update Schedule
@@ -385,16 +376,14 @@ Only check for updates at night:
 
 ```yaml
 env:
-  - name: UPDATE_CRON
-    value: "0 3 * * *"  # 3 AM daily
+  UPDATE_CRON: "0 3 * * *"  # 3 AM daily
 ```
 
 Disable automatic updates:
 
 ```yaml
 env:
-  - name: UPDATE_CRON
-    value: ""
+  UPDATE_CRON: ""
 ```
 
 ### Custom Restart Schedule
@@ -403,8 +392,7 @@ Restart every 6 hours:
 
 ```yaml
 env:
-  - name: RESTART_CRON
-    value: "0 */6 * * *"
+  RESTART_CRON: "0 */6 * * *"
 ```
 
 ### Backup to External Storage
@@ -413,8 +401,7 @@ Use a post-backup hook to copy backups elsewhere:
 
 ```yaml
 env:
-  - name: POST_BACKUP_HOOK
-    value: 'scp @BACKUP_FILE@ user@backup-server:~/valheim-backups/'
+  POST_BACKUP_HOOK: 'scp @BACKUP_FILE@ user@backup-server:~/valheim-backups/'
 ```
 
 ### Discord Notifications
@@ -423,8 +410,7 @@ Notify on Discord when server starts:
 
 ```yaml
 env:
-  - name: PRE_BOOTSTRAP_HOOK
-    value: 'curl -X POST -H "Content-Type: application/json" -d "{\"content\":\"Valheim server starting!\"}" "YOUR_DISCORD_WEBHOOK_URL"'
+  PRE_BOOTSTRAP_HOOK: 'curl -X POST -H "Content-Type: application/json" -d "{\"content\":\"Valheim server starting!\"}" "YOUR_DISCORD_WEBHOOK_URL"'
 ```
 
 ### Use LoadBalancer Instead of NodePort
