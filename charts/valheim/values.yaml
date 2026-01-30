@@ -63,31 +63,12 @@ podSecurityContext:
   fsGroup: 1000  # Valheim server runs as UID 1000
 
 # Container-level security context
+# Note: lloesche/valheim-server image handles its own permission setup
+# Running as root initially, then drops to UID 1000
 containerSecurityContext:
-  runAsUser: 1000
-  runAsNonRoot: true
-  allowPrivilegeEscalation: false
   capabilities:
     add:
       - SYS_NICE  # Allows Steam library to optimize CPU scheduling
-
-# Init container to fix volume permissions
-initContainers:
-  - name: fix-permissions
-    image: busybox:latest
-    command: ['sh', '-c']
-    args:
-      - |
-        echo "Setting up /config directories and permissions..."
-        mkdir -p /config/worlds /config/backups
-        chown -R 1000:1000 /config
-        chmod -R 775 /config
-        echo "Setup complete"
-    securityContext:
-      runAsUser: 0  # Must run as root to chown
-    volumeMounts:
-      - name: data
-        mountPath: /config
 
 # Optional: Pin to specific node (e.g., node with more RAM)
 nodeSelector: {}
