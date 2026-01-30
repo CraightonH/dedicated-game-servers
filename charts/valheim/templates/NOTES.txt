@@ -1,8 +1,8 @@
 Congratulations! You've deployed a {{ .Chart.Name }} server.
 
 🛡️ Valheim Server Info:
-   Server Name: {{ index (default list .Values.env) 0 | default dict | dig "value" "My Valheim Server" }}
-   World Name: {{ index (default list .Values.env) 1 | default dict | dig "value" "Dedicated" }}
+   Server Name: {{ .Values.env.SERVER_NAME | default "My Valheim Server" }}
+   World Name: {{ .Values.env.WORLD_NAME | default "Dedicated" }}
 
 {{- if eq .Values.service.type "NodePort" }}
 
@@ -17,7 +17,7 @@ Congratulations! You've deployed a {{ .Chart.Name }} server.
        - Press F2 or click "Join Game"
        - Click "Add server" (bottom right)
        - Enter: <node-ip>:{{ (index .Values.service.ports 0).nodePort }}
-       - Connect and enter password: {{ index (default list .Values.env) 2 | default dict | dig "value" "secret" }}
+       - Connect and enter password: {{ .Values.env.SERVER_PASS | default "secret" }}
 {{- else if eq .Values.service.type "LoadBalancer" }}
 
 🌐 Connection Information:
