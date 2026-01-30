@@ -1,0 +1,91 @@
+Congratulations! You've deployed a {{ .Chart.Name }} server.
+
+🛡️ Valheim Server Info:
+   Server Name: {{ index (default list .Values.env) 0 | default dict | dig "value" "My Valheim Server" }}
+   World Name: {{ index (default list .Values.env) 1 | default dict | dig "value" "Dedicated" }}
+
+{{- if eq .Values.service.type "NodePort" }}
+
+🌐 Connection Information:
+  1. Get a node IP:
+       kubectl get nodes -o wide
+
+  2. Connect to your server:
+       <node-ip>:{{ (index .Values.service.ports 0).nodePort }}
+
+     In Valheim:
+       - Press F2 or click "Join Game"
+       - Click "Add server" (bottom right)
+       - Enter: <node-ip>:{{ (index .Values.service.ports 0).nodePort }}
+       - Connect and enter password: {{ index (default list .Values.env) 2 | default dict | dig "value" "secret" }}
+{{- else if eq .Values.service.type "LoadBalancer" }}
+
+🌐 Connection Information:
+  1. Get the external IP:
+       kubectl get svc {{ .Values.name }} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+
+  2. Connect to your server:
+       <external-ip>:{{ (index .Values.service.ports 0).port }}
+
+     In Valheim:
+       - Press F2 or click "Join Game"
+       - Click "Add server" (bottom right)
+       - Enter: <external-ip>:{{ (index .Values.service.ports 0).port }}
+       - Connect and enter password
+{{- end }}
+
+📋 Useful Commands:
+
+  View logs:
+    kubectl logs -f -l app={{ .Values.name }}
+
+  Watch server startup:
+    kubectl logs -f -l app={{ .Values.name }} | grep -E "Game server|DungeonDB"
+
+  Backup world saves:
+    POD=$(kubectl get pod -l app={{ .Values.name }} -o jsonpath='{.items[0].metadata.name}')
+    kubectl cp $POD:{{ .Values.persistence.mountPath }}/worlds ./valheim-backup
+
+  Restart server:
+    kubectl delete pod -l app={{ .Values.name }}
+
+  Check automatic backups:
+    POD=$(kubectl get pod -l app={{ .Values.name }} -o jsonpath='{.items[0].metadata.name}')
+    kubectl exec $POD -- ls -lh {{ .Values.persistence.mountPath }}/backups
+
+⚙️ Configuration:
+
+  The server will:
+  - Check for updates every 15 minutes (when idle)
+  - Restart daily at 5 AM (when idle)
+  - Create hourly backups (kept for 3 days)
+
+  To change settings, update your values.yaml and run:
+    helm upgrade {{ .Release.Name }} {{ .Chart.Name }} -f values.yaml
+
+🎮 Playing:
+
+  First-time players:
+  - Create a new character when you join
+  - The world will be automatically created if it doesn't exist
+  - Your character is saved server-side
+
+  Existing worlds:
+  - Copy your .db and .fwl files from Windows:
+    C:\Users\<username>\AppData\LocalLow\IronGate\Valheim\worlds\
+  - To the server:
+    kubectl cp <worldname>.db <pod>:/config/worlds/
+    kubectl cp <worldname>.fwl <pod>:/config/worlds/
+
+📚 More Information:
+
+  Chart documentation:
+    https://github.com/CraightonH/dedicated-game-servers/blob/main/charts/{{ .Chart.Name }}/README.md
+
+  Valheim server Docker image:
+    https://github.com/lloesche/valheim-server-docker
+
+  Valheim Wiki:
+    https://valheim.fandom.com/wiki/Valheim_Wiki
+
+Enjoy your adventures in Valheim! ⚔️ 🛡️

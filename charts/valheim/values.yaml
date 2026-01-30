@@ -1,0 +1,112 @@
+# Valheim Dedicated Server Configuration
+
+# Server identity
+name: valheim
+
+# Valheim Docker image
+# Using lloesche/valheim-server which includes BepInEx and ValheimPlus support
+# See: https://github.com/lloesche/valheim-server-docker
+image:
+  repository: lloesche/valheim-server
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# Resource allocation
+resources:
+  requests:
+    memory: 3Gi
+    cpu: 1000m
+  limits:
+    memory: 6Gi
+    cpu: 2000m
+
+# Persistent storage for world saves and config
+persistence:
+  enabled: true
+  storageClass: ""  # Use cluster's default storage class (or override with --set)
+  size: 20Gi
+  mountPath: /config
+
+# Network configuration (NodePort for home cluster access)
+service:
+  type: NodePort
+  ports:
+    - name: game
+      port: 2456
+      nodePort: 30456  # Change if port is already in use
+      protocol: UDP
+    - name: query
+      port: 2457
+      nodePort: 30457  # Change if port is already in use
+      protocol: UDP
+
+# Environment variables for Valheim server
+# Documentation: https://github.com/lloesche/valheim-server-docker#environment-variables
+env:
+  - name: SERVER_NAME
+    value: "My Valheim Server"
+  - name: WORLD_NAME
+    value: "Dedicated"
+  - name: SERVER_PASS
+    value: "secret"  # Must be at least 5 characters!
+  - name: SERVER_PUBLIC
+    value: "false"
+  - name: UPDATE_CRON
+    value: "*/15 * * * *"  # Check for updates every 15 minutes
+  - name: UPDATE_IF_IDLE
+    value: "true"  # Only update when no players connected
+  - name: RESTART_CRON
+    value: "0 5 * * *"  # Daily restart at 5 AM
+  - name: RESTART_IF_IDLE
+    value: "true"  # Only restart when no players connected
+  - name: BACKUPS
+    value: "true"
+  - name: BACKUPS_CRON
+    value: "0 * * * *"  # Hourly backups
+  - name: BACKUPS_DIRECTORY
+    value: "/config/backups"
+  - name: BACKUPS_MAX_AGE
+    value: "3"  # Keep 3 days of backups
+  - name: TZ
+    value: "America/Denver"
+
+# Pod-level security context
+podSecurityContext:
+  fsGroup: 1000  # Valheim server runs as UID 1000
+
+# Container-level security context
+containerSecurityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    add:
+      - SYS_NICE  # Allows Steam library to optimize CPU scheduling
+
+# Init container to fix volume permissions
+initContainers:
+  - name: fix-permissions
+    image: busybox:latest
+    command: ['sh', '-c']
+    args:
+      - |
+        echo "Setting up /config directories and permissions..."
+        mkdir -p /config/worlds /config/backups
+        chown -R 1000:1000 /config
+        chmod -R 775 /config
+        echo "Setup complete"
+    securityContext:
+      runAsUser: 0  # Must run as root to chown
+    volumeMounts:
+      - name: data
+        mountPath: /config
+
+# Optional: Pin to specific node (e.g., node with more RAM)
+nodeSelector: {}
+  # kubernetes.io/hostname: node1
+
+# Optional: Tolerations
+tolerations: []
+
+# Stop timeout for graceful shutdown (Valheim needs time to save)
+terminationGracePeriodSeconds: 120
