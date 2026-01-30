@@ -136,7 +136,7 @@ jobs:
           # Set timeout based on game (Valheim needs more time for initial download)
           TIMEOUT="5m"
           if [ "${{ matrix.game }}" = "valheim" ]; then
-            TIMEOUT="10m"
+            TIMEOUT="15m"  # Valheim downloads 1.78 GB on first start
           fi
           
           # Install with CI-optimized settings

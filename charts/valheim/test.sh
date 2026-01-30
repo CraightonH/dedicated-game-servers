@@ -12,11 +12,12 @@ kubectl wait --for=condition=ready pod -l app=valheim --timeout=300s
 POD=$(kubectl get pod -l app=valheim -o jsonpath='{.items[0].metadata.name}')
 echo "✅ Pod is ready: $POD"
 
-# Wait up to 300 seconds for Valheim server to start  
-# Valheim takes much longer than Factorio (downloads 1+ GB game files on first start)
-echo "📋 Waiting for Valheim server to start (up to 300 seconds / 5 minutes)..."
+# Wait up to 720 seconds for Valheim server to start  
+# Valheim takes much longer than Factorio (downloads 1.78 GB game files on first start)
+# Download can take 10+ minutes on CI infrastructure, plus server initialization time
+echo "📋 Waiting for Valheim server to start (up to 720 seconds / 12 minutes)..."
 SUCCESS=false
-for i in {1..300}; do
+for i in {1..720}; do
     # Get recent logs
     LOGS=$(kubectl logs $POD --tail=100 2>/dev/null || echo "")
     
@@ -42,9 +43,9 @@ for i in {1..300}; do
         exit 1
     fi
     
-    # Progress indicator every 30 seconds
-    if [ $((i % 30)) -eq 0 ]; then
-        echo "   Still waiting... ($i/300 seconds)"
+    # Progress indicator every 60 seconds
+    if [ $((i % 60)) -eq 0 ]; then
+        echo "   Still waiting... ($i/720 seconds, ~$((i/60)) minutes)"
     fi
     
     # Wait 1 second before next check
@@ -53,7 +54,8 @@ done
 
 # Check if we found the success message
 if [ "$SUCCESS" = false ]; then
-    echo "❌ Server did not start within 300 seconds"
+    echo "❌ Server did not start within 720 seconds (12 minutes)"
+    echo "This may indicate a download or initialization issue."
     echo "Recent logs:"
     kubectl logs $POD --tail=200
     exit 1
