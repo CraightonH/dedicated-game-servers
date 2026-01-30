@@ -13,7 +13,7 @@ This repository provides a collection of Helm charts for easily deploying game s
 | Game | Chart | Description |
 |------|-------|-------------|
 | **Factorio** | `dedicated-game-servers/factorio` | Factory building and automation |
-| Valheim | _coming soon_ | Viking survival |
+| **Valheim** | `dedicated-game-servers/valheim` | Viking survival and exploration |
 | Satisfactory | _coming soon_ | Factory building in 3D |
 
 ## Quick Start
@@ -48,6 +48,25 @@ helm install factorio dedicated-game-servers/factorio -f my-values.yaml
 ```
 
 See [charts/factorio/README.md](./charts/factorio/README.md) for full configuration options.
+
+#### Valheim
+
+```bash
+# Basic installation (requires password)
+helm install valheim dedicated-game-servers/valheim \
+  --set env[2].value="MySecurePass123"
+
+# With custom server name and world
+helm install valheim dedicated-game-servers/valheim \
+  --set env[0].value="Vikings United" \
+  --set env[1].value="Midgard" \
+  --set env[2].value="SecurePassword"
+
+# With custom values file
+helm install valheim dedicated-game-servers/valheim -f my-values.yaml
+```
+
+See [charts/valheim/README.md](./charts/valheim/README.md) for full configuration options.
 
 ## Architecture
 
@@ -89,6 +108,7 @@ The library chart provides reusable templates, and each game chart provides sens
 
 See individual game chart READMEs for detailed configuration:
 - [Factorio](./charts/factorio/README.md)
+- [Valheim](./charts/valheim/README.md)
 
 ### Common Patterns
 
