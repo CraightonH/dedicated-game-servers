@@ -133,12 +133,18 @@ jobs:
         run: |
           echo "🚀 Deploying ${{ matrix.game }} chart..."
           
+          # Set timeout based on game (Valheim needs more time for initial download)
+          TIMEOUT="5m"
+          if [ "${{ matrix.game }}" = "valheim" ]; then
+            TIMEOUT="10m"
+          fi
+          
           # Install with CI-optimized settings
           helm install ${{ matrix.game }}-test ./charts/${{ matrix.game }} \
             --set persistence.size="1Gi" \
             --set resources.requests.memory="512Mi" \
             --set resources.limits.memory="1Gi" \
-            --wait --timeout=5m
+            --wait --timeout=$TIMEOUT
 
       - name: Verify deployment resources
         run: |
