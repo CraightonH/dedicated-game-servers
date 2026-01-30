@@ -50,19 +50,6 @@ Usage: {{ include "game-server.env" . }}
 {{- end -}}
 
 {{- if not (empty $envList) -}}
-  {{- /* Output the final list in Kubernetes format */ -}}
-  {{- range $envList -}}
-    {{- if hasKey . "value" -}}
-- name: {{ .name }}
-  value: {{ .value | quote }}
-    {{- else if hasKey . "valueFrom" -}}
-- name: {{ .name }}
-  valueFrom:
-    {{- toYaml .valueFrom | nindent 4 }}
-    {{- else -}}
-- name: {{ .name }}
-  {{- toYaml (omit . "name") | nindent 2 }}
-    {{- end -}}
-  {{- end -}}
+  {{- toYaml $envList -}}
 {{- end -}}
 {{- end -}}
